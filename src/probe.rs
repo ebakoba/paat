@@ -1,54 +1,10 @@
-use std::str::FromStr;
 use std::time::Duration as StandardDuration;
 use tokio::time::sleep;
 use async_recursion::async_recursion;
 use reqwest::Client;
-use actix::{Actor, ActorFutureExt, AsyncContext, Context, Handler, Message, ResponseActFuture, ResponseFuture, WrapFuture};
+use actix::{Actor, Context, Handler, Message, ResponseFuture};
 use chrono::{NaiveDateTime};
-use serde::{Deserialize, Serialize};
-
-#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
-pub struct Capacity {
-  #[serde(rename(deserialize = "pcs"))]
-  passangers: i32,
-  #[serde(rename(deserialize = "bc"))]
-  bc: i32,
-  #[serde(rename(deserialize = "sv"))]
-  small_vehicles: i32,
-  #[serde(rename(deserialize = "bv"))]
-  large_vehicles: i32,
-  #[serde(rename(deserialize = "dc"))]
-  dc: i32,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct CodeWrapper {
-  code: String,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Event {
-  #[serde(rename(deserialize = "uid"))]
-  uuid: String,
-  capacities: Capacity,
-  #[serde(rename(deserialize = "pricelist"))]
-  price_list: CodeWrapper,
-  #[serde(rename(deserialize = "transportationType"))]
-  transportation_type: CodeWrapper,
-  ship: CodeWrapper,
-  status: String,
-  #[serde(rename(deserialize = "dtstart"))]
-  start: String,
-  #[serde(rename(deserialize = "dtend"))]
-  end: String,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct EventResponse {
-  #[serde(rename(deserialize = "totalCount"))]
-  total_count: i32,
-  items: Vec<Event>
-}
+use crate::types::event::{Event, EventResponse};
 
 
 #[derive(Message)]
@@ -72,7 +28,7 @@ impl FindSpot {
 
     None
   }
-  
+
   #[async_recursion]
   pub async fn wait_for_opening(&self, client: &Client) -> Result<(), reqwest::Error> {
     let requested_datetime = self.0; 
@@ -89,7 +45,7 @@ impl FindSpot {
           println!("Event: {:?}", event);
           if event.capacities.small_vehicles < 1 {
             println!("Polling some more");
-            sleep(StandardDuration::from_secs(5)).await;
+            sleep(StandardDuration::from_secs(10)).await;
             return self.wait_for_opening(client).await;
           } else {
             println!("Answer found");
@@ -121,10 +77,6 @@ impl Probe {
 
 impl Actor for Probe {
   type Context = Context<Self>;
-
-  fn started(&mut self, _ctx: &mut Self::Context) {
-    println!("I am alive!");
-  }
 }
 
 impl Handler<FindSpot> for Probe {
