@@ -1,6 +1,9 @@
 use std::str::FromStr;
-
-use actix::{Context, Actor, Message, Handler, ResponseFuture};
+use std::time::Duration as StandardDuration;
+use tokio::time::sleep;
+use async_recursion::async_recursion;
+use reqwest::Client;
+use actix::{Actor, ActorFutureExt, AsyncContext, Context, Handler, Message, ResponseActFuture, ResponseFuture, WrapFuture};
 use chrono::{NaiveDateTime};
 use serde::{Deserialize, Serialize};
 
@@ -69,6 +72,39 @@ impl FindSpot {
 
     None
   }
+  
+  #[async_recursion]
+  pub async fn wait_for_opening(&self, client: &Client) -> Result<(), reqwest::Error> {
+    let requested_datetime = self.0; 
+    let body = client.get("https://www.praamid.ee/online/events")
+      .query(&[("direction", "HR"), ("departure-date", &requested_datetime.format("%Y-%m-%d").to_string())])
+      .send()
+      .await?
+      .text()
+      .await?;
+
+    match serde_json::from_str::<EventResponse>(&body) {
+      Ok(response) => {
+        if let Some(event) = self.find_matching_event(response.items.clone()) {
+          println!("Event: {:?}", event);
+          if event.capacities.small_vehicles < 1 {
+            println!("Polling some more");
+            sleep(StandardDuration::from_secs(5)).await;
+            return self.wait_for_opening(client).await;
+          } else {
+            println!("Answer found");
+          }
+        } else {
+          println!("No matching event");
+        }
+      }
+      Err(error) => {
+        println!("Error: {:?}", error);
+      }
+    }
+
+    Ok(())
+  }
 }
 
 pub struct Probe {
@@ -95,25 +131,10 @@ impl Handler<FindSpot> for Probe {
   type Result = ResponseFuture<Result<(), reqwest::Error>>;
 
   fn handle(&mut self, message: FindSpot, _ctx: &mut Context<Self>) -> Self::Result {
-    let requested_datetime =   message.0;
     let client = self.client.clone();
     Box::pin(async move {
-      let body = client.get("https://www.praamid.ee/online/events")
-        .query(&[("direction", "HR"), ("departure-date", &requested_datetime.format("%Y-%m-%d").to_string())])
-        .send()
-        .await?
-        .text()
-        .await?;
-      match serde_json::from_str::<EventResponse>(&body) {
-        Ok(response) => {
-          let event = message.find_matching_event(response.items.clone());
-          println!("Event: {:?}", event);
-        }
-        Err(error) => {
-          println!("Error: {:?}", error);
-        }
-      }
-      
+      message.wait_for_opening(&client).await?;
+
       Ok(())
     })
   }

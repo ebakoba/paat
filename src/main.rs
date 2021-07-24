@@ -11,7 +11,7 @@ async fn main() {
 
   let address = Probe::new().start();
 
-  let datetime = NaiveDate::from_ymd(2021, 7, 24).and_hms(11, 30, 00);
+  let datetime = NaiveDate::from_ymd(2021, 7, 24).and_hms(14, 30, 00);
   address.send(FindSpot(datetime)).await;
 
   println!("I am all finished");
