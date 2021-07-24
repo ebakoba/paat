@@ -1,19 +1,18 @@
 mod probe;
 
-use std::time::Duration;
-
 use actix::Actor;
 use probe::Probe;
-
+use chrono::{NaiveDate};
 use crate::probe::FindSpot;
 
 #[actix::main]
 async fn main() {
-    println!("Hello, world!");
+  println!("Hello, world!");
 
-    let address = Probe::new().start();
+  let address = Probe::new().start();
 
-    address.send(FindSpot(Duration::MAX)).await;
-    
-    println!("I am all finished");
+  let datetime = NaiveDate::from_ymd(2021, 7, 24).and_hms(11, 30, 00);
+  address.send(FindSpot(datetime)).await;
+
+  println!("I am all finished");
 }

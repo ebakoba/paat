@@ -1,8 +1,10 @@
+use std::str::FromStr;
+
 use actix::{Context, Actor, Message, Handler, ResponseFuture};
-use std::time::Duration;
+use chrono::{NaiveDateTime};
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub struct Capacity {
   #[serde(rename(deserialize = "pcs"))]
   passangers: i32,
@@ -16,12 +18,12 @@ pub struct Capacity {
   dc: i32,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CodeWrapper {
   code: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Event {
   #[serde(rename(deserialize = "uid"))]
   uuid: String,
@@ -30,7 +32,12 @@ pub struct Event {
   price_list: CodeWrapper,
   #[serde(rename(deserialize = "transportationType"))]
   transportation_type: CodeWrapper,
-  ship: CodeWrapper
+  ship: CodeWrapper,
+  status: String,
+  #[serde(rename(deserialize = "dtstart"))]
+  start: String,
+  #[serde(rename(deserialize = "dtend"))]
+  end: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -43,18 +50,37 @@ pub struct EventResponse {
 
 #[derive(Message)]
 #[rtype(result = "Result<(), reqwest::Error>")]
-pub struct FindSpot(pub Duration);
+pub struct FindSpot(pub NaiveDateTime);
+
+impl FindSpot {
+  pub fn find_matching_event(&self, events: Vec<Event>) -> Option<Event> {
+    let target_datetime = self.0;
+    for event in events {
+      match NaiveDateTime::parse_from_str(&event.start, "%Y-%m-%dT%H:%M:%S%.f%z") {
+        Ok (start_datetime) => {
+          println!("Start datetime: {:?}", start_datetime);
+          if target_datetime == start_datetime {
+            return Some(event.into())
+          }
+        }
+        Err(_) => {}
+      }
+    }
+
+    None
+  }
+}
 
 pub struct Probe {
   client: reqwest::Client,
 }
 
 impl Probe {
-    pub fn new() -> Self {
-      Self {
-        client: reqwest::Client::new()
-      }
+  pub fn new() -> Self {
+    Self {
+      client: reqwest::Client::new()
     }
+  }
 }
 
 impl Actor for Probe {
@@ -69,28 +95,26 @@ impl Handler<FindSpot> for Probe {
   type Result = ResponseFuture<Result<(), reqwest::Error>>;
 
   fn handle(&mut self, message: FindSpot, _ctx: &mut Context<Self>) -> Self::Result {
-      let time = message.0;
-      let client = self.client.clone();
-      Box::pin(async move {
-        let body = client.get("https://www.praamid.ee/online/events?direction=HR&departure-date=2021-07-24")
-          .send()
-          .await?
-          .text()
-          .await?;
-         println!("Body is {:?}", body);
-        match serde_json::from_str::<EventResponse>(&body) {
-          Ok(response) => {
-          println!("Response is {:?}", response);
-          for event in response.items {
-            println!("Event: {:?}", event);
-          }
-          }
-          Err(error) => {
-            println!("Error: {:?}", error);
-          }
+    let requested_datetime =   message.0;
+    let client = self.client.clone();
+    Box::pin(async move {
+      let body = client.get("https://www.praamid.ee/online/events")
+        .query(&[("direction", "HR"), ("departure-date", &requested_datetime.format("%Y-%m-%d").to_string())])
+        .send()
+        .await?
+        .text()
+        .await?;
+      match serde_json::from_str::<EventResponse>(&body) {
+        Ok(response) => {
+          let event = message.find_matching_event(response.items.clone());
+          println!("Event: {:?}", event);
         }
-        
-        Ok(())
+        Err(error) => {
+          println!("Error: {:?}", error);
+        }
+      }
+      
+      Ok(())
     })
   }
 }
