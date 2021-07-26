@@ -1,14 +1,18 @@
-mod probe;
-mod types;
-
 use actix::Actor;
-use probe::Probe;
 use chrono::{NaiveDate};
-use crate::probe::FindSpot;
+use paat_core::{Probe, FindSpot};
+use dialoguer::Input;
 
 #[actix::main]
 async fn main() {
   println!("Hello, world!");
+
+  let input : String = Input::new()
+    .with_prompt("Tea or coffee?")
+    .with_initial_text("Yes")
+    .default("No".into())
+    .interact_text().unwrap();
+  println!("Input was: {:?}", input);
 
   let address = Probe::new().start();
 
