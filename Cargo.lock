@@ -129,6 +129,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "const_format"
+version = "0.2.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "74cd0be51cd9ea39adba1f11b1a82d0fb41674c800540e2817d510da21bf9508"
+dependencies = [
+ "const_format_proc_macros",
+]
+
+[[package]]
+name = "const_format_proc_macros"
+version = "0.2.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "29c36c619c422113552db4eb28cddba8faa757e33f758cc3415bd2885977b591"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "unicode-xid",
+]
+
+[[package]]
 name = "core-foundation"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -592,6 +612,7 @@ dependencies = [
  "actix",
  "async-recursion",
  "chrono",
+ "const_format",
  "reqwest",
  "serde",
  "serde_json",

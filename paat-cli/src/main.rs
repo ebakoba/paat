@@ -1,18 +1,16 @@
 use actix::Actor;
 use chrono::{NaiveDate};
-use paat_core::{Probe, FindSpot};
+use paat_core::{Probe, FindSpot, datetime::{get_date}};
 use dialoguer::Input;
 
 #[actix::main]
 async fn main() {
-  println!("Hello, world!");
-
-  let input : String = Input::new()
-    .with_prompt("Tea or coffee?")
-    .with_initial_text("Yes")
-    .default("No".into())
+  let date_input : String = Input::new()
+    .with_prompt("Please enter the date to watch")
+    .default("2021-07-30".into())
     .interact_text().unwrap();
-  println!("Input was: {:?}", input);
+  let date_to_search = get_date(&date_input).unwrap();
+  println!("Date to search: {:?}", date_to_search);
 
   let address = Probe::new().start();
 

@@ -1,13 +1,36 @@
 mod types;
+mod url;
+pub mod datetime;
 
 use std::time::Duration as StandardDuration;
 use tokio::time::sleep;
 use async_recursion::async_recursion;
 use reqwest::Client;
 use actix::{Actor, Context, Handler, Message, ResponseFuture};
-use chrono::{NaiveDateTime};
+use chrono::{Date, NaiveDateTime, Utc};
 use crate::types::event::{Event, EventResponse};
+use url::{EVENTS_URL};
 
+#[derive(Message)]
+#[rtype(result = "Result<Vec<Event>, reqwest::Error>")]
+pub struct FetchEvents(pub Date<Utc>);
+
+impl FetchEvents {
+  pub async fn fetch_events(&self, client: &Client) -> Result<Vec<Event>, reqwest::Error> {
+    let requested_datetime = self.0; 
+    let body = client.get(EVENTS_URL)
+      .query(&[("direction", "HR"), ("departure-date", &requested_datetime.format("%Y-%m-%d").to_string())])
+      .send()
+      .await?
+      .text()
+      .await?;
+
+    match serde_json::from_str::<EventResponse>(&body) {
+      Ok(event_response) => Ok(event_response.items),
+      Err(_) => Ok(vec![])
+    }
+  }
+}
 
 #[derive(Message)]
 #[rtype(result = "Result<(), reqwest::Error>")]
@@ -34,7 +57,7 @@ impl FindSpot {
   #[async_recursion]
   pub async fn wait_for_opening(&self, client: &Client) -> Result<(), reqwest::Error> {
     let requested_datetime = self.0; 
-    let body = client.get("https://www.praamid.ee/online/events")
+    let body = client.get(EVENTS_URL)
       .query(&[("direction", "HR"), ("departure-date", &requested_datetime.format("%Y-%m-%d").to_string())])
       .send()
       .await?
@@ -90,6 +113,19 @@ impl Handler<FindSpot> for Probe {
       message.wait_for_opening(&client).await?;
 
       Ok(())
+    })
+  }
+}
+
+impl Handler<FetchEvents> for Probe {
+  type Result = ResponseFuture<Result<Vec<Event>, reqwest::Error>>;
+
+  fn handle(&mut self, message: FetchEvents, _ctx: &mut Context<Self>) -> Self::Result {
+    let client = self.client.clone();
+    Box::pin(async move {
+      let events = message.fetch_events(&client).await?;
+
+      Ok(events)
     })
   }
 }
