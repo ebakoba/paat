@@ -1,5 +1,5 @@
 use actix::Actor;
-use paat_core::{EventManager, WaitForSpot, FetchEvents, datetime::{get_naive_date}};
+use paat_core::{actors::event::{EventManager, WaitForSpot, FetchEvents}, datetime::{get_naive_date}};
 use dialoguer::Input;
 
 #[actix::main]
