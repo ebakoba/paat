@@ -1,4 +1,4 @@
-mod types;
+mod service;
 mod url;
 pub mod datetime;
 
@@ -7,47 +7,74 @@ use tokio::time::sleep;
 use async_recursion::async_recursion;
 use reqwest::Client;
 use actix::{Actor, Context, Handler, Message, ResponseFuture};
-use chrono::{Date, NaiveDateTime, Utc};
-use crate::types::event::{Event, EventResponse};
+use chrono::{NaiveDate};
+use crate::service::event::{Event, EventResponse};
 use url::{EVENTS_URL};
 
-#[derive(Message)]
-#[rtype(result = "Result<Vec<Event>, reqwest::Error>")]
-pub struct FetchEvents(pub Date<Utc>);
+pub struct EventManager {
+  client: reqwest::Client,
+  departure_date: NaiveDate,
+}
 
-impl FetchEvents {
-  pub async fn fetch_events(&self, client: &Client) -> Result<Vec<Event>, reqwest::Error> {
-    let requested_datetime = self.0; 
+impl EventManager {
+  pub fn new(departure_date: NaiveDate) -> Self {
+    Self {
+      client: reqwest::Client::new(),
+      departure_date,
+    }
+  }
+
+  pub async fn fetch_events(client: &Client, departure_date: &NaiveDate) -> Result<Option<Vec<Event>>, reqwest::Error> {
     let body = client.get(EVENTS_URL)
-      .query(&[("direction", "HR"), ("departure-date", &requested_datetime.format("%Y-%m-%d").to_string())])
+      .query(&[("direction", "HR"), ("departure-date", &departure_date.format("%Y-%m-%d").to_string())])
       .send()
       .await?
       .text()
       .await?;
 
-    match serde_json::from_str::<EventResponse>(&body) {
-      Ok(event_response) => Ok(event_response.items),
-      Err(_) => Ok(vec![])
-    }
+    let events = match serde_json::from_str::<EventResponse>(&body) {
+      Ok(event_response) => {
+        Some(event_response.items)
+      },
+      Err(_) => {
+        None
+      }
+    };
+
+    Ok(events)
+  }
+}
+
+impl Actor for EventManager {
+  type Context = Context<Self>;
+}
+
+#[derive(Message)]
+#[rtype(result = "Result<Option<Vec<Event>>, reqwest::Error>")]
+pub struct FetchEvents;
+
+impl Handler<FetchEvents> for EventManager {
+  type Result = ResponseFuture<Result<Option<Vec<Event>>, reqwest::Error>>;
+
+  fn handle(&mut self, _: FetchEvents, _ctx: &mut Context<Self>) -> Self::Result {
+    let client = self.client.clone();
+    let departure_date = self.departure_date.clone();
+    Box::pin(async move {
+      EventManager::fetch_events(&client, &departure_date).await
+    })
   }
 }
 
 #[derive(Message)]
 #[rtype(result = "Result<(), reqwest::Error>")]
-pub struct FindSpot(pub NaiveDateTime);
+pub struct WaitForSpot(pub String);
 
-impl FindSpot {
+impl WaitForSpot {
   pub fn find_matching_event(&self, events: Vec<Event>) -> Option<Event> {
-    let target_datetime = self.0;
+    let event_uuid = self.0.to_string();
     for event in events {
-      match NaiveDateTime::parse_from_str(&event.start, "%Y-%m-%dT%H:%M:%S%.f%z") {
-        Ok (start_datetime) => {
-          println!("Start datetime: {:?}", start_datetime);
-          if target_datetime == start_datetime {
-            return Some(event.into())
-          }
-        }
-        Err(_) => {}
+      if event.uuid == event_uuid {
+        return Some(event.into());
       }
     }
 
@@ -55,77 +82,40 @@ impl FindSpot {
   }
 
   #[async_recursion]
-  pub async fn wait_for_opening(&self, client: &Client) -> Result<(), reqwest::Error> {
-    let requested_datetime = self.0; 
-    let body = client.get(EVENTS_URL)
-      .query(&[("direction", "HR"), ("departure-date", &requested_datetime.format("%Y-%m-%d").to_string())])
-      .send()
-      .await?
-      .text()
-      .await?;
-
-    match serde_json::from_str::<EventResponse>(&body) {
-      Ok(response) => {
-        if let Some(event) = self.find_matching_event(response.items.clone()) {
-          println!("Event: {:?}", event);
-          if event.capacities.small_vehicles < 1 {
-            println!("Polling some more");
-            sleep(StandardDuration::from_secs(10)).await;
-            return self.wait_for_opening(client).await;
-          } else {
-            println!("Answer found");
-          }
+  pub async fn wait_for_spot(&self, client: &Client, departure_date: &NaiveDate) -> Result<(), reqwest::Error> { 
+    let events_option = EventManager::fetch_events(client, departure_date).await?;
+    
+    if let Some(events) = events_option {
+      if let Some(event) = self.find_matching_event(events) {
+        println!("Event: {:?}", event);
+        if event.capacities.small_vehicles < 1 {
+          println!("Polling some more");
+          sleep(StandardDuration::from_secs(10)).await;
+          return self.wait_for_spot(client, departure_date).await;
         } else {
-          println!("No matching event");
+          println!("Answer found");
         }
+      } else {
+        println!("No matching event");
       }
-      Err(error) => {
-        println!("Error: {:?}", error);
-      }
+    } else {
+      println!("No events found")
     }
-
+     
     Ok(())
   }
 }
 
-pub struct Probe {
-  client: reqwest::Client,
-}
-
-impl Probe {
-  pub fn new() -> Self {
-    Self {
-      client: reqwest::Client::new()
-    }
-  }
-}
-
-impl Actor for Probe {
-  type Context = Context<Self>;
-}
-
-impl Handler<FindSpot> for Probe {
+impl Handler<WaitForSpot> for EventManager {
   type Result = ResponseFuture<Result<(), reqwest::Error>>;
 
-  fn handle(&mut self, message: FindSpot, _ctx: &mut Context<Self>) -> Self::Result {
+  fn handle(&mut self, message: WaitForSpot, _ctx: &mut Context<Self>) -> Self::Result {
     let client = self.client.clone();
+    let departure_date = self.departure_date.clone();
     Box::pin(async move {
-      message.wait_for_opening(&client).await?;
+      message.wait_for_spot(&client, &departure_date).await?;
 
       Ok(())
-    })
-  }
-}
-
-impl Handler<FetchEvents> for Probe {
-  type Result = ResponseFuture<Result<Vec<Event>, reqwest::Error>>;
-
-  fn handle(&mut self, message: FetchEvents, _ctx: &mut Context<Self>) -> Self::Result {
-    let client = self.client.clone();
-    Box::pin(async move {
-      let events = message.fetch_events(&client).await?;
-
-      Ok(events)
     })
   }
 }

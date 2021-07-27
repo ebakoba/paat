@@ -35,7 +35,6 @@ pub struct Event {
   #[serde(rename(deserialize = "dtend"))]
   pub end: String,
 }
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct EventResponse {
   #[serde(rename(deserialize = "totalCount"))]

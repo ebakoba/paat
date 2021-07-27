@@ -1,6 +1,5 @@
 use actix::Actor;
-use chrono::{NaiveDate};
-use paat_core::{Probe, FindSpot, datetime::{get_date}};
+use paat_core::{EventManager, WaitForSpot, FetchEvents, datetime::{get_naive_date}};
 use dialoguer::Input;
 
 #[actix::main]
@@ -9,13 +8,21 @@ async fn main() {
     .with_prompt("Please enter the date to watch")
     .default("2021-07-30".into())
     .interact_text().unwrap();
-  let date_to_search = get_date(&date_input).unwrap();
-  println!("Date to search: {:?}", date_to_search);
+  let departure_date = get_naive_date(&date_input).unwrap();
+  println!("Departure date: {:?}", departure_date);
 
-  let address = Probe::new().start();
+  let address = EventManager::new(departure_date).start();
 
-  let datetime = NaiveDate::from_ymd(2021, 7, 24).and_hms(17, 30, 00);
-  address.send(FindSpot(datetime)).await;
+  match address.send(FetchEvents).await {
+    Ok(Ok(Some(events))) => {
+      if let Some(first_event) = events.get(0) {
+        address.send(WaitForSpot(first_event.uuid.clone())).await.unwrap().unwrap();
+      }
+    }
+    _ => {
+      println!("Failed to fetch events");
+    }
+  }
 
   println!("I am all finished");
 }
