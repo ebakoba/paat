@@ -4,6 +4,7 @@ use async_recursion::async_recursion;
 use reqwest::Client;
 use actix::{Actor, Context, Handler, Message, ResponseFuture};
 use chrono::{NaiveDate};
+use crate::datetime::naive_date_to_string;
 use crate::services::event::{Event, EventResponse};
 use crate::url::{EVENTS_URL};
 
@@ -22,7 +23,7 @@ impl EventManager {
 
   pub async fn fetch_events(client: &Client, departure_date: &NaiveDate) -> Result<Option<Vec<Event>>, reqwest::Error> {
     let body = client.get(EVENTS_URL)
-      .query(&[("direction", "HR"), ("departure-date", &departure_date.format("%Y-%m-%d").to_string())])
+      .query(&[("direction", "HR"), ("departure-date", &naive_date_to_string(departure_date))])
       .send()
       .await?
       .text()
