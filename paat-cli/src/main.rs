@@ -1,6 +1,6 @@
 use actix::Actor;
 use paat_core::{actors::event::{EventManager, WaitForSpot, FetchEvents}, datetime::{get_naive_date}};
-use dialoguer::Input;
+use dialoguer::{Input, Select};
 
 #[actix::main]
 async fn main() {
@@ -15,9 +15,11 @@ async fn main() {
 
   match address.send(FetchEvents).await {
     Ok(Ok(Some(events))) => {
-      if let Some(first_event) = events.get(0) {
-        address.send(WaitForSpot(first_event.uuid.clone())).await.unwrap().unwrap();
-      }
+      let selection: usize = Select::new()
+      .items(&events)
+      .interact().unwrap();
+      let selected_event = &events[selection];
+      address.send(WaitForSpot(selected_event.uuid.clone())).await.unwrap().unwrap();
     }
     _ => {
       println!("Failed to fetch events");

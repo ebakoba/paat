@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter, Result};
-use crate::datetime::{rfc3339_to_local_time_string};
+use crate::datetime::{service_datetime_to_local_time_string};
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub struct Capacity {
@@ -41,8 +41,8 @@ pub struct Event {
 impl Display for Event {
   fn fmt(&self, fmt: &mut Formatter) -> Result {
       let parse_results = (
-        rfc3339_to_local_time_string(&self.start),
-        rfc3339_to_local_time_string(&self.end)
+        service_datetime_to_local_time_string(&self.start),
+        service_datetime_to_local_time_string(&self.end)
       );
       match parse_results {
         (Ok(start_time_string), Ok(end_time_string)) => {

@@ -84,9 +84,7 @@ impl WaitForSpot {
     
     if let Some(events) = events_option {
       if let Some(event) = self.find_matching_event(events) {
-        println!("Event: {:?}", event);
         if event.capacities.small_vehicles < 1 {
-          println!("Polling some more");
           sleep(StandardDuration::from_secs(10)).await;
           return self.wait_for_spot(client, departure_date).await;
         } else {

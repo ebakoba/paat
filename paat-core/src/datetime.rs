@@ -27,6 +27,11 @@ pub fn get_utc_datetime(input: &str) -> Result<DateTime<Utc>, ParseError> {
   Ok(Utc.from_utc_datetime(&naive_datetime))
 }
 
+pub fn get_local_datetime(input: &str) -> ParseResult<DateTime<Local>> {
+  let fixed_offset_datetime = DateTime::parse_from_str(input, DATETIME_FORMAT)?;
+  Ok(fixed_offset_datetime_to_local(fixed_offset_datetime))
+}
+
 pub fn fixed_offset_datetime_to_utc(fixed_offset_datetime: DateTime<FixedOffset>) -> DateTime<Utc> {
   DateTime::from(fixed_offset_datetime)
 }
@@ -51,6 +56,11 @@ pub fn local_datetime_to_time_string(local_datetime: DateTime<Local>) -> String 
 
 pub fn rfc3339_to_local_time_string(input: &str) -> ParseResult<String> {
   let local_datetime = rfc3339_to_local(input)?;
+  Ok(local_datetime_to_time_string(local_datetime))
+}
+
+pub fn service_datetime_to_local_time_string(input: &str) -> ParseResult<String> {
+  let local_datetime = get_local_datetime(input)?;
   Ok(local_datetime_to_time_string(local_datetime))
 }
 
