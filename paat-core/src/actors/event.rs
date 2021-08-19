@@ -7,30 +7,50 @@ use chrono::NaiveDate;
 use log::debug;
 use reqwest::Client;
 use std::time::Duration as StandardDuration;
+use strum::EnumProperty;
+use strum_macros::{Display, EnumProperty, EnumString};
 use tokio::time::sleep;
+
+#[derive(Display, Debug, PartialEq, Clone, Copy, EnumString, EnumProperty)]
+pub enum Direction {
+    #[strum(props(Abbreviation = "HR"), to_string = "Heltermaa - Rohuküla")]
+    HR,
+    #[strum(props(Abbreviation = "RH"), to_string = "Rohuküla - Heltermaa")]
+    RH,
+    #[strum(props(Abbreviation = "KV"), to_string = "Kuivastu - Virtsu")]
+    KV,
+    #[strum(props(Abbreviation = "VK"), to_string = "Virtsu - Kuivastu")]
+    VK,
+}
 
 pub struct EventManager {
     client: reqwest::Client,
     departure_date: NaiveDate,
+    direction: Direction,
 }
 
 impl EventManager {
-    pub fn new(departure_date: NaiveDate) -> Self {
+    pub fn new(departure_date: NaiveDate, direction: Direction) -> Self {
         Self {
             client: reqwest::Client::new(),
             departure_date,
+            direction,
         }
     }
 
     pub async fn fetch_events(
         client: &Client,
         departure_date: &NaiveDate,
+        direction: Direction,
     ) -> Result<Option<Vec<Event>>, reqwest::Error> {
         let body = client
             .get(EVENTS_URL)
             .query(&[
-                ("direction", "HR"),
-                ("departure-date", &naive_date_to_string(departure_date)),
+                (
+                    "direction",
+                    direction.get_str("Abbreviation").unwrap().to_string(),
+                ),
+                ("departure-date", naive_date_to_string(departure_date)),
             ])
             .send()
             .await?
@@ -60,7 +80,10 @@ impl Handler<FetchEvents> for EventManager {
     fn handle(&mut self, _: FetchEvents, _ctx: &mut Context<Self>) -> Self::Result {
         let client = self.client.clone();
         let departure_date = self.departure_date.clone();
-        Box::pin(async move { EventManager::fetch_events(&client, &departure_date).await })
+        let direction = self.direction;
+        Box::pin(
+            async move { EventManager::fetch_events(&client, &departure_date, direction).await },
+        )
     }
 }
 
@@ -85,14 +108,15 @@ impl WaitForSpot {
         &self,
         client: &Client,
         departure_date: &NaiveDate,
+        direction: Direction,
     ) -> Result<(), reqwest::Error> {
-        let events_option = EventManager::fetch_events(client, departure_date).await?;
+        let events_option = EventManager::fetch_events(client, departure_date, direction).await?;
 
         if let Some(events) = events_option {
             if let Some(event) = self.find_matching_event(events) {
                 if event.capacities.small_vehicles < 1 {
                     sleep(StandardDuration::from_secs(10)).await;
-                    return self.wait_for_spot(client, departure_date).await;
+                    return self.wait_for_spot(client, departure_date, direction).await;
                 } else {
                     debug!("Answer found");
                 }
@@ -113,8 +137,11 @@ impl Handler<WaitForSpot> for EventManager {
     fn handle(&mut self, message: WaitForSpot, _ctx: &mut Context<Self>) -> Self::Result {
         let client = self.client.clone();
         let departure_date = self.departure_date.clone();
+        let direction = self.direction;
         Box::pin(async move {
-            message.wait_for_spot(&client, &departure_date).await?;
+            message
+                .wait_for_spot(&client, &departure_date, direction)
+                .await?;
 
             Ok(())
         })
