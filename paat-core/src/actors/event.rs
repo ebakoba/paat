@@ -4,6 +4,7 @@ use crate::url::EVENTS_URL;
 use actix::{Actor, Context, Handler, Message, ResponseFuture};
 use async_recursion::async_recursion;
 use chrono::NaiveDate;
+use log::debug;
 use reqwest::Client;
 use std::time::Duration as StandardDuration;
 use tokio::time::sleep;
@@ -93,13 +94,13 @@ impl WaitForSpot {
                     sleep(StandardDuration::from_secs(10)).await;
                     return self.wait_for_spot(client, departure_date).await;
                 } else {
-                    println!("Answer found");
+                    debug!("Answer found");
                 }
             } else {
-                println!("No matching event");
+                debug!("No matching event");
             }
         } else {
-            println!("No events found")
+            debug!("No events found")
         }
 
         Ok(())
