@@ -3,12 +3,13 @@ use chrono::{
     TimeZone, Utc,
 };
 
-const DATE_FORMAT: &str = "%Y-%m-%d";
+const INPUT_DATE_FORMAT: &str = "%d-%m-%Y";
+const OUTPUT_DATE_FORMAT: &str = "%Y-%m-%d";
 const DATETIME_FORMAT: &str = "%Y-%m-%dT%H:%M:%S%.f%z";
 const TIME_FORMAT: &str = "%H:%M";
 
 pub fn get_naive_date(input: &str) -> Result<NaiveDate, ParseError> {
-    NaiveDate::parse_from_str(input, DATE_FORMAT)
+    NaiveDate::parse_from_str(input, INPUT_DATE_FORMAT)
 }
 
 pub fn get_local_date(input: &str) -> Result<Option<Date<Local>>, ParseError> {
@@ -70,5 +71,5 @@ pub fn service_datetime_to_local_time_string(input: &str) -> ParseResult<String>
 }
 
 pub fn naive_date_to_string(naive_date: &NaiveDate) -> String {
-    naive_date.format(DATE_FORMAT).to_string()
+    naive_date.format(OUTPUT_DATE_FORMAT).to_string()
 }

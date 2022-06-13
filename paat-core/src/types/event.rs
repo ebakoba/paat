@@ -1,6 +1,22 @@
 use crate::datetime::service_datetime_to_local_time_string;
 use serde::{Deserialize, Serialize};
-use std::fmt::{Display, Formatter, Result};
+use std::{
+    collections::HashMap,
+    fmt::{Display, Formatter, Result},
+};
+use strum_macros::{Display, EnumProperty, EnumString};
+
+#[derive(Display, Debug, PartialEq, Clone, Copy, EnumString, EnumProperty)]
+pub enum Direction {
+    #[strum(props(Abbreviation = "HR"), to_string = "Heltermaa - Rohuküla")]
+    HR,
+    #[strum(props(Abbreviation = "RH"), to_string = "Rohuküla - Heltermaa")]
+    RH,
+    #[strum(props(Abbreviation = "KV"), to_string = "Kuivastu - Virtsu")]
+    KV,
+    #[strum(props(Abbreviation = "VK"), to_string = "Virtsu - Kuivastu")]
+    VK,
+}
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub struct Capacity {
@@ -36,6 +52,13 @@ pub struct Event {
     pub start: String,
     #[serde(rename(deserialize = "dtend"))]
     pub end: String,
+}
+
+pub type EventMap = HashMap<String, Event>;
+
+pub enum WaitForSpot {
+    Done(usize),
+    Waiting,
 }
 
 impl Display for Event {
