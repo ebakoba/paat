@@ -3,7 +3,7 @@ use chrono::{
     TimeZone, Utc,
 };
 
-const INPUT_DATE_FORMAT: &str = "%d-%m-%Y";
+const INPUT_DATE_FORMAT: &str = "%d.%m.%Y";
 const OUTPUT_DATE_FORMAT: &str = "%Y-%m-%d";
 const DATETIME_FORMAT: &str = "%Y-%m-%dT%H:%M:%S%.f%z";
 const TIME_FORMAT: &str = "%H:%M";
