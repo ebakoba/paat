@@ -7,16 +7,20 @@ use anyhow::{anyhow, Result};
 use chrono::NaiveDate;
 use futures::{stream, Stream, StreamExt};
 use reqwest::Client as ReqwestClient;
+use std::time::Duration;
 use strum::EnumProperty;
+use tokio::time::sleep;
 
 pub struct Client {
     client: ReqwestClient,
+    pause_between_stream_items: Duration,
 }
 
 impl Client {
-    pub fn new() -> Self {
+    pub fn new(pause_between_stream_items: Duration) -> Self {
         Self {
             client: reqwest::Client::new(),
+            pause_between_stream_items,
         }
     }
 
@@ -55,7 +59,12 @@ impl Client {
         departure_date: &'a NaiveDate,
         direction: &'a Direction,
     ) -> impl Stream<Item = Result<EventMap>> + 'a {
-        stream::iter(0..).then(move |_| self.fetch_events(departure_date, direction))
+        stream::iter(0..).then(move |i| async move {
+            if i > 0 {
+                sleep(self.pause_between_stream_items).await;
+            }
+            self.fetch_events(departure_date, direction).await
+        })
     }
 
     pub fn create_wait_stream<'a>(
