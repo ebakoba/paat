@@ -1,17 +1,16 @@
 use chrono::NaiveDate;
 use dialoguer::{theme::ColorfulTheme, Input, Select};
-use paat_core::{actors::event::Direction, datetime::get_naive_date};
+use paat_core::{datetime::get_naive_date, types::event::Direction};
 use std::{io, str::FromStr};
 
 pub fn input_departure_date() -> io::Result<NaiveDate> {
     let date_input: String = Input::new()
-        .with_prompt("Please enter the date to watch")
-        .default("2021-07-30".into())
+        .with_prompt("Daparture date")
+        .default("30.07.2022".into())
         .interact_text()?;
     let departure_date = get_naive_date(&date_input)
         .map_err(|_| io::Error::new(io::ErrorKind::Unsupported, "Unsupported date"))?;
 
-    println!("Departure date: {:?}", departure_date);
     Ok(departure_date)
 }
 

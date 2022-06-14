@@ -1,36 +1,63 @@
+mod constants;
 mod inputs;
+mod sound;
 
-use actix::Actor;
+use crate::{
+    constants::{TICK_TIMEOUT, TIMEOUT_BETWEEN_REQUESTS},
+    inputs::{input_departure_date, input_direction},
+};
+use anyhow::{anyhow, Result};
 use dialoguer::{theme::ColorfulTheme, Select};
-use paat_core::actors::event::{EventManager, FetchEvents, WaitForSpot};
-use std::io;
+use futures::StreamExt;
+use indicatif::ProgressBar;
+use log::debug;
+use paat_core::{
+    client::Client,
+    types::event::{Event, WaitForSpot},
+};
+use sound::play_success_sound;
+use std::time::Duration;
 
-use crate::inputs::{input_departure_date, input_direction};
-
-#[actix::main]
-async fn main() -> io::Result<()> {
-    let departure_date = input_departure_date()?;
+#[tokio::main]
+async fn main() -> Result<()> {
     let direction = input_direction()?;
-    let address = EventManager::new(departure_date, direction).start();
+    let departure_date = input_departure_date()?;
 
-    match address.send(FetchEvents).await {
-        Ok(Ok(Some(mut events))) => {
-            events.sort_by_key(|event| event.start.clone());
-            let selection: usize = Select::with_theme(&ColorfulTheme::default())
-                .items(&events)
-                .interact()?;
-            let selected_event = &events[selection];
-            address
-                .send(WaitForSpot(selected_event.uuid.clone()))
-                .await
-                .unwrap()
-                .unwrap();
-        }
-        _ => {
-            println!("Failed to fetch events");
+    let client = Client::new(Duration::from_secs(TIMEOUT_BETWEEN_REQUESTS));
+    let event_map = client.fetch_events(&departure_date, &direction).await?;
+    let mut events = event_map.values().collect::<Vec<&Event>>();
+    events.sort_by_key(|event| event.start.clone());
+
+    let selection: usize = Select::with_theme(&ColorfulTheme::default())
+        .items(&events)
+        .interact()?;
+    let selected_event = &events[selection];
+    let progress_bar = ProgressBar::new_spinner();
+    progress_bar.enable_steady_tick(TICK_TIMEOUT);
+
+    let mut wait_stream =
+        Box::pin(client.create_wait_stream(&departure_date, &direction, &selected_event.uuid));
+
+    let mut wait_counter: usize = 0;
+    while let Some(wait_result) = wait_stream.next().await {
+        let wait_response = wait_result?;
+        match wait_response {
+            WaitForSpot::Done(number_of_spots) => {
+                progress_bar.finish_with_message(format!("Found {} spot(s)", number_of_spots));
+                if let Err(music_error) = play_success_sound(5).await {
+                    debug!("Failed to play sound: {}", music_error);
+                }
+                return Ok(());
+            }
+            WaitForSpot::Waiting => {
+                wait_counter += 1;
+                progress_bar.set_message(format!(
+                    "\tNumber of tries: {}, time between requests is {} seconds",
+                    wait_counter, TIMEOUT_BETWEEN_REQUESTS
+                ));
+            }
         }
     }
 
-    println!("I am all finished");
-    Ok(())
+    Err(anyhow!("Failed to get an event from the event stream"))
 }
