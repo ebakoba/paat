@@ -1,19 +1,16 @@
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use rodio::{Decoder, OutputStream, Source};
 use std::{include_bytes, io::Cursor, time::Duration};
 use tokio::time::sleep;
 
 pub async fn play_success_sound(timeout: u64) -> Result<()> {
-    let bytes = if cfg!(unix) {
-        include_bytes!("../assets/sample.wav")
-    } else if cfg!(windows) {
-        include_bytes!(r"..\assets\sample.wav")
-    } else {
-        return Err(anyhow!("Compiled on an unsupported platform"));
-    };
+    #[cfg(target_os = "linux")]
+    let sound_bytes = include_bytes!("../assets/sample.wav");
+    #[cfg(target_os = "windows")]
+    let sound_bytes = include_bytes!(r"..\assets\sample.wav");
 
     let (_, stream_handle) = OutputStream::try_default()?;
-    let cursor = Cursor::new(bytes.as_ref());
+    let cursor = Cursor::new(sound_bytes.as_ref());
     let decoder = Decoder::new(cursor)?;
     stream_handle.play_raw(decoder.convert_samples())?;
 
