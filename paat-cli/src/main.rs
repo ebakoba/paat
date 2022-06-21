@@ -8,6 +8,7 @@ use crate::{
 };
 use anyhow::{anyhow, Result};
 use dialoguer::{theme::ColorfulTheme, Select};
+use env_logger::init;
 use futures::StreamExt;
 use indicatif::ProgressBar;
 use log::debug;
@@ -20,6 +21,7 @@ use std::time::Duration;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    init();
     let direction = input_direction()?;
     let departure_date = input_departure_date()?;
 
