@@ -1,5 +1,6 @@
 mod constants;
 mod inputs;
+mod output;
 mod sound;
 
 use crate::{
@@ -11,12 +12,11 @@ use dialoguer::{theme::ColorfulTheme, Select};
 use env_logger::init;
 use futures::StreamExt;
 use indicatif::ProgressBar;
-use log::debug;
+use output::create_final_output;
 use paat_core::{
     client::Client,
     types::event::{Event, WaitForSpot},
 };
-use sound::play_success_sound;
 use std::time::Duration;
 
 #[tokio::main]
@@ -45,10 +45,8 @@ async fn main() -> Result<()> {
         let wait_response = wait_result?;
         match wait_response {
             WaitForSpot::Done(number_of_spots) => {
-                progress_bar.finish_with_message(format!("Found {} spot(s)", number_of_spots));
-                if let Err(music_error) = play_success_sound(5).await {
-                    debug!("Failed to play sound: {}", music_error);
-                }
+                progress_bar.finish_and_clear();
+                create_final_output(number_of_spots).await;
                 return Ok(());
             }
             WaitForSpot::Waiting => {

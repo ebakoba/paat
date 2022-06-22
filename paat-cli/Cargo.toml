@@ -15,4 +15,10 @@ indicatif = "0.16"
 log = "0.4"
 paat-core = { path = "../paat-core" }
 rodio = { version = "0.15", default-features = false, features = ["wav"] }
-tokio = { version = "1", default-features = false, features = ["time", "rt", "macros", "rt-multi-thread"] }
+tokio = { version = "1", default-features = false, features = [
+  "time",
+  "signal",
+  "rt",
+  "macros",
+  "rt-multi-thread",
+] }
