@@ -1,2 +1,2 @@
-pub const TIMEOUT_BETWEEN_REQUESTS: u64 = 60;
+pub const TIMEOUT_BETWEEN_REQUESTS: u64 = 30;
 pub const TICK_TIMEOUT: u64 = 100;
