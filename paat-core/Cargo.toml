@@ -1,10 +1,16 @@
 [package]
 name = "paat-core"
+description = "core functions for communicating with praamid.ee internal API"
 version = "0.1.0"
 edition = "2018"
 authors = ["Kaarel Allemann <kaarelallemann@gmail.com>"]
 license = "MIT"
-license-file = "../LICENSE"
+documentation = "https://docs.rs/paat-core"
+repository = "https://github.com/ebakoba/paat"
+homepage = "https://github.com/ebakoba/paat"
+readme = "../README.md"
+categories = ["api-bindings"]
+keywords = ["api-bindings", "internal-api", "ferry"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
