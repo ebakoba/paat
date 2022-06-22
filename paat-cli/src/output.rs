@@ -23,6 +23,7 @@ pub async fn create_final_output(number_of_spots: usize) {
     loop {
         select! {
           _ = ctrl_c_future => {
+            println!();
             println!("Goodbye!");
             break
           },
