@@ -28,6 +28,10 @@ async fn main() -> Result<()> {
     let client = Client::new(Duration::from_secs(TIMEOUT_BETWEEN_REQUESTS));
     let event_map = client.fetch_events(&departure_date, &direction).await?;
     let mut events = event_map.values().collect::<Vec<&Event>>();
+    if events.len() == 0 {
+        println!("No ferry times found for that date");
+        return Ok(());
+    }
     events.sort_by_key(|event| event.start.clone());
 
     let selection: usize = Select::with_theme(&ColorfulTheme::default())
