@@ -3,10 +3,7 @@ use rodio::{Decoder, OutputStream, Sink, Source};
 use std::{include_bytes, io::Cursor};
 
 pub async fn play_infinate_sound() -> Result<()> {
-    #[cfg(target_os = "linux")]
     let sound_bytes = include_bytes!("../assets/sample.wav");
-    #[cfg(target_os = "windows")]
-    let sound_bytes = include_bytes!(r"..\assets\sample.wav");
 
     let (_stream, stream_handle) = OutputStream::try_default()?;
     let sink = Sink::try_new(&stream_handle)?;

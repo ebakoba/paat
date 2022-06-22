@@ -33,6 +33,8 @@ jobs:
           toolchain: stable
           target: x86_64-unknown-linux-gnu
           override: true
+      - name: Install xmllint
+        run: sudo apt-get install -y libasound2-dev
       - uses: actions-rs/cargo@v1
         with:
           use-cross: true
