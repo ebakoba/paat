@@ -1,4 +1,4 @@
-<h1 align="center">Paat</h1>
+# Paat
 
 ### Overview
 
@@ -36,4 +36,4 @@ cargo install --path .
 
 Paat is written agains internal API of [praamid.ee](praamid.ee). Changes at the internal API can break functionality of Paat at any moment.
 
-Currently Paat can only poll spots for small vechicles.
+Currently Paat can only poll spots for small vehicles.
