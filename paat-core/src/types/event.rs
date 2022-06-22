@@ -6,7 +6,7 @@ use std::{
 };
 use strum_macros::{Display, EnumProperty, EnumString};
 
-#[derive(Display, Debug, PartialEq, Clone, Copy, EnumString, EnumProperty)]
+#[derive(Display, Debug, Clone, Copy, EnumString, EnumProperty)]
 pub enum Direction {
     #[strum(props(Abbreviation = "HR"), to_string = "Heltermaa - Rohuküla")]
     HR,
