@@ -9,7 +9,7 @@ pub async fn play_success_sound(timeout: u64) -> Result<()> {
     #[cfg(target_os = "windows")]
     let sound_bytes = include_bytes!(r"..\assets\sample.wav");
 
-    let (_, stream_handle) = OutputStream::try_default()?;
+    let (_out, stream_handle) = OutputStream::try_default()?;
     let cursor = Cursor::new(sound_bytes.as_ref());
     let decoder = Decoder::new(cursor)?;
     stream_handle.play_raw(decoder.convert_samples())?;
