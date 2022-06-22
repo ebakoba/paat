@@ -1,5 +1,5 @@
 use crate::{
-    datetime::naive_date_to_string,
+    datetime::naive_date_to_output_string,
     types::event::{Direction, EventMap, EventResponse, WaitForSpot},
     url::EVENTS_URL,
 };
@@ -37,7 +37,10 @@ impl Client {
                     "direction",
                     direction.get_str("Abbreviation").unwrap().to_string(),
                 ),
-                ("departure-date", naive_date_to_string(departure_date)),
+                (
+                    "departure-date",
+                    naive_date_to_output_string(departure_date),
+                ),
             ])
             .send()
             .await?
