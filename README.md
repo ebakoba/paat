@@ -14,6 +14,8 @@ paat-cli
 
 ![Paat Usage GIF](assets/paat-usage.gif)
 
+Oh, and it will play sound too🎵!
+
 ### Installation
 
 #### Using Cargo
