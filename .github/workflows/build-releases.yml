@@ -1,8 +1,8 @@
-name: Paat Build Workflow
+name: Release paat-cli
 on:
   push:
-    branches:
-      - master
+    tags:        
+      - paat-cli.v*
 jobs:
   windows_x86_64:
     name: Windows 64bit build
@@ -19,10 +19,12 @@ jobs:
           use-cross: true
           command: build
           args: --target x86_64-pc-windows-gnu --release
-      - uses: actions/upload-artifact@v2
-        with: 
-          name: deputy-cli
-          path: target/x86_64-pc-windows-gnu/release
+      - name: Rename executable
+        run: mv target/x86_64-pc-windows-gnu/release/paat-cli.exe target/x86_64-pc-windows-gnu/release/paat-cli_x86_64.exe
+      - uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            target/x86_64-pc-windows-gnu/release/paat-cli_x86_64.exe
   linux_x86_64:
     name: Linux 64bit build
     runs-on: ubuntu-18.04
@@ -39,10 +41,12 @@ jobs:
         with:
           command: build
           args: --target x86_64-unknown-linux-gnu	--release
-      - uses: actions/upload-artifact@v2
-        with: 
-          name: deputy-cli
-          path: target/x86_64-unknown-linux-gnu/release
+      - name: Rename executable
+        run: mv target/x86_64-unknown-linux-gnu/release/paat-cli target/x86_64-unknown-linux-gnu/release/paat-cli-linux64
+      - uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            target/x86_64-unknown-linux-gnu/release/paat-cli-linux64
   mac_x86_64:
     name: Mac 64bit build
     runs-on: macos-latest
@@ -55,10 +59,11 @@ jobs:
           override: true
       - uses: actions-rs/cargo@v1
         with:
-          use-cross: true
           command: build
           args: --target x86_64-apple-darwin --release
-      - uses: actions/upload-artifact@v2
-        with: 
-          name: deputy-cli
-          path: target/x86_64-apple-darwin/release
+      - name: Rename executable
+        run: mv target/x86_64-apple-darwin/release/paat-cli target/x86_64-apple-darwin/release/paat-cli-macos_x86_64
+      - uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            target/x86_64-apple-darwin/release/paat-cli-macos_x86_64
