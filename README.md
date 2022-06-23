@@ -18,6 +18,10 @@ Oh, and it will play sound too🎵!
 
 ### Installation
 
+#### Executables
+
+Compiled executables can be downloaded under [Release section](https://github.com/ebakoba/paat/releases/).
+
 #### Using Cargo
 
 ```bash
