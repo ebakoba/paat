@@ -1,5 +1,6 @@
 [workspace]
 members = [
   "paat-core",
-  "paat-cli"
+  "paat-cli",
+  "paat-tui"
 ]
