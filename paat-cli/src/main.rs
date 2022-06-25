@@ -8,15 +8,12 @@ use crate::{
     inputs::{input_departure_date, input_direction},
 };
 use anyhow::{anyhow, Result};
-use dialoguer::{theme::ColorfulTheme, Select};
 use env_logger::init;
 use futures::StreamExt;
 use indicatif::ProgressBar;
+use inputs::input_event;
 use output::create_final_output;
-use paat_core::{
-    client::Client,
-    types::event::{Event, WaitForSpot},
-};
+use paat_core::{client::Client, types::event::WaitForSpot};
 use std::time::Duration;
 
 #[tokio::main]
@@ -27,17 +24,8 @@ async fn main() -> Result<()> {
 
     let client = Client::new(Duration::from_secs(TIMEOUT_BETWEEN_REQUESTS));
     let event_map = client.fetch_events(&departure_date, &direction).await?;
-    let mut events = event_map.values().collect::<Vec<&Event>>();
-    if events.len() == 0 {
-        println!("No ferry times found for that date");
-        return Ok(());
-    }
-    events.sort_by_key(|event| event.start.clone());
 
-    let selection: usize = Select::with_theme(&ColorfulTheme::default())
-        .items(&events)
-        .interact()?;
-    let selected_event = &events[selection];
+    let selected_event = input_event(event_map)?;
     let progress_bar = ProgressBar::new_spinner();
     progress_bar.enable_steady_tick(TICK_TIMEOUT);
 
