@@ -10,7 +10,7 @@ use std::{collections::HashMap, io, str::FromStr};
 pub fn input_departure_date() -> io::Result<NaiveDate> {
     let current_date = chrono::Utc::now().naive_local().date();
     let date_input: String = Input::new()
-        .with_prompt("Daparture date")
+        .with_prompt("Departure date")
         .default(naive_date_to_input_string(&current_date))
         .interact_text()?;
     let departure_date = get_naive_date(&date_input)
