@@ -1,3 +1,11 @@
 application-title = Paat
 usage-guide-title = Kasutusjuhend
 usage-guide-text = Vajuta:{\n}ESC- rakenduse sulgemiseks
+departure-date = Sõidu kuupäev
+monday-character = E
+tuesday-character = T
+wednesday-character = K
+thursday-character = N
+friday-character = R
+saturday-character = L
+sunday-character = P
