@@ -1,2 +1,3 @@
-hello-world = Tere, maailm!
-usage-guide = Kasutusjuhend
+application-title = Paat
+usage-guide-title = Kasutusjuhend
+usage-guide-text = Vajuta:{\n}ESC- rakenduse sulgemiseks
