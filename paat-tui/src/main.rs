@@ -1,13 +1,17 @@
 mod components;
+mod localization;
 mod messages;
 mod model;
+mod ascii;
 
 use anyhow::Result;
+use localization::setup_localization;
 use log::error;
 use model::Model;
 use tuirealm::{PollStrategy, Update};
 
 fn main() -> Result<()> {
+    setup_localization()?;
     let mut model = Model::default();
     let _ = model.terminal.enter_alternate_screen();
     let _ = model.terminal.enable_raw_mode();
@@ -18,7 +22,6 @@ fn main() -> Result<()> {
                 model.quit = true;
             }
             Ok(messages) if messages.len() > 0 => {
-                // NOTE: redraw if at least one msg has been processed
                 model.redraw = true;
                 for msg in messages.into_iter() {
                     let mut msg = Some(msg);
