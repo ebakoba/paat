@@ -1,5 +1,5 @@
 use crate::{
-    components::{AppHeader, ComponentId},
+    components::{AppHeader, ComponentId, DepartureDate},
     messages::Message,
 };
 use std::time::Duration;
@@ -38,17 +38,22 @@ impl Model {
                 let chunks = Layout::default()
                     .direction(Direction::Vertical)
                     .margin(1)
+                    .constraints([Constraint::Length(14), Constraint::Length(14)].as_ref())
+                    .split(f.size());
+                let input_chunks = Layout::default()
+                    .direction(Direction::Horizontal)
+                    .margin(1)
                     .constraints(
                         [
-                            Constraint::Length(14),
-                            Constraint::Length(3),
-                            Constraint::Length(3),
-                            Constraint::Length(3),
+                            Constraint::Ratio(1, 3),
+                            Constraint::Ratio(1, 3),
+                            Constraint::Ratio(1, 3),
                         ]
                         .as_ref(),
                     )
-                    .split(f.size());
+                    .split(chunks[1]);
                 app.view(&ComponentId::Header, f, chunks[0]);
+                app.view(&ComponentId::Calendar, f, input_chunks[0]);
             })
             .is_ok());
     }
@@ -62,6 +67,13 @@ impl Model {
         );
         assert!(app
             .mount(ComponentId::Header, Box::new(AppHeader::new()), vec![])
+            .is_ok());
+        assert!(app
+            .mount(
+                ComponentId::Calendar,
+                Box::new(DepartureDate::new()),
+                vec![]
+            )
             .is_ok());
 
         app
