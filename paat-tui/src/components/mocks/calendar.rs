@@ -1,6 +1,7 @@
 use crate::localization::fl;
 
 use self::attributes::CALENDAR_TITLE;
+use chrono::{Month, NaiveDate, Weekday};
 use tui_realm_stdlib::utils::get_block;
 use tuirealm::{
     command::{Cmd, CmdResult},
@@ -39,6 +40,36 @@ impl Calendar {
         );
         self
     }
+
+    fn create_calendar_header<'a>() -> Row<'a> {
+        let day_names = vec![
+            fl!("monday-character"),
+            fl!("tuesday-character"),
+            fl!("wednesday-character"),
+            fl!("thursday-character"),
+            fl!("friday-character"),
+            fl!("saturday-character"),
+            fl!("sunday-character"),
+        ];
+
+        let cells: Vec<Cell> = day_names
+            .iter()
+            .map(|letter| Cell::from(format!(" {}", letter)))
+            .collect();
+        Row::new(cells).style(Style::default().fg(Color::Yellow))
+    }
+
+    fn days_in_month(year: i32, month: u32) -> Vec<i64> {
+        let year = 2018;
+        let last_day = if month == 12 {
+            NaiveDate::from_ymd(year + 1, 1, 1)
+        } else {
+            NaiveDate::from_ymd(year, month + 1, 1)
+        }
+        .signed_duration_since(NaiveDate::from_ymd(year, month, 1))
+        .num_days();
+        (1..last_day).collect()
+    }
 }
 
 impl MockComponent for Calendar {
@@ -65,28 +96,16 @@ impl MockComponent for Calendar {
                     Cell::from("32").style(Style::default().fg(Color::Yellow)),
                 ])])
                 .style(Style::default().fg(Color::White))
-                .header(
-                    Row::new(vec![
-                        Cell::from(fl!("monday-character")),
-                        Cell::from(fl!("tuesday-character")),
-                        Cell::from(fl!("wednesday-character")),
-                        Cell::from(fl!("thursday-character")),
-                        Cell::from(fl!("friday-character")),
-                        Cell::from(fl!("saturday-character")),
-                        Cell::from(fl!("sunday-character")),
-                    ])
-                    .style(Style::default().fg(Color::Yellow))
-                    .bottom_margin(1),
-                )
+                .header(Calendar::create_calendar_header())
                 .block(Block::default().title("Table"))
                 .widths(&[
-                    Constraint::Length(3),
-                    Constraint::Length(3),
-                    Constraint::Length(3),
-                    Constraint::Length(3),
-                    Constraint::Length(3),
-                    Constraint::Length(3),
-                    Constraint::Length(3),
+                    Constraint::Length(2),
+                    Constraint::Length(2),
+                    Constraint::Length(2),
+                    Constraint::Length(2),
+                    Constraint::Length(2),
+                    Constraint::Length(2),
+                    Constraint::Length(2),
                 ])
                 .column_spacing(1)
                 .block(get_block(
