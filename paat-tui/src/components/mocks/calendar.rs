@@ -86,35 +86,27 @@ impl MockComponent for Calendar {
                 .constraints([Constraint::Min(0)].as_ref())
                 .split(area);
             frame.render_widget(
-                Table::new(vec![Row::new(vec![
-                    Cell::from("31"),
-                    Cell::from("32").style(Style::default().fg(Color::Yellow)),
-                    Cell::from("32").style(Style::default().fg(Color::Yellow)),
-                    Cell::from("32").style(Style::default().fg(Color::Yellow)),
-                    Cell::from("32").style(Style::default().fg(Color::Yellow)),
-                    Cell::from("32").style(Style::default().fg(Color::Yellow)),
-                    Cell::from("32").style(Style::default().fg(Color::Yellow)),
-                ])])
-                .style(Style::default().fg(Color::White))
-                .header(Calendar::create_calendar_header())
-                .block(Block::default().title("Table"))
-                .widths(&[
-                    Constraint::Length(2),
-                    Constraint::Length(2),
-                    Constraint::Length(2),
-                    Constraint::Length(2),
-                    Constraint::Length(2),
-                    Constraint::Length(2),
-                    Constraint::Length(2),
-                ])
-                .column_spacing(1)
-                .block(get_block(
-                    Borders::default(),
-                    Some((calendar_title, Alignment::Center)),
-                    false,
-                    None,
-                ))
-                .style(Style::default()),
+                Table::new(vec![])
+                    .style(Style::default().fg(Color::White))
+                    .header(Calendar::create_calendar_header())
+                    .block(Block::default().title("Table"))
+                    .widths(&[
+                        Constraint::Length(2),
+                        Constraint::Length(2),
+                        Constraint::Length(2),
+                        Constraint::Length(2),
+                        Constraint::Length(2),
+                        Constraint::Length(2),
+                        Constraint::Length(2),
+                    ])
+                    .column_spacing(1)
+                    .block(get_block(
+                        Borders::default(),
+                        Some((calendar_title, Alignment::Center)),
+                        false,
+                        None,
+                    ))
+                    .style(Style::default()),
                 vertical_chunks[0],
             );
         }
