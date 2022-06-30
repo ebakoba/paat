@@ -1,7 +1,7 @@
 use crate::localization::fl;
 
 use self::attributes::CALENDAR_TITLE;
-use chrono::{Month, NaiveDate, Weekday};
+use chrono::{Datelike, Month, NaiveDate, Weekday};
 use tui_realm_stdlib::utils::get_block;
 use tuirealm::{
     command::{Cmd, CmdResult},
@@ -59,16 +59,46 @@ impl Calendar {
         Row::new(cells).style(Style::default().fg(Color::Yellow))
     }
 
-    fn days_in_month(year: i32, month: u32) -> Vec<i64> {
+    fn days_in_month(year: i32, month: u32) -> i64 {
         let year = 2018;
-        let last_day = if month == 12 {
+        if month == 12 {
             NaiveDate::from_ymd(year + 1, 1, 1)
         } else {
             NaiveDate::from_ymd(year, month + 1, 1)
         }
         .signed_duration_since(NaiveDate::from_ymd(year, month, 1))
-        .num_days();
-        (1..last_day).collect()
+        .num_days()
+    }
+
+    fn create_calendar_rows<'a>(year: i32, month: u32) -> Vec<Row<'a>> {
+        let mut calendar_rows: Vec<Vec<Cell>> = Vec::new();
+
+        let start_weekday = NaiveDate::from_ymd(year, month, 1)
+            .weekday()
+            .num_days_from_monday();
+        let mut row_count = 0;
+        let mut day_count = 1;
+        while day_count <= Self::days_in_month(year, month) {
+            if calendar_rows.get(row_count) == None {
+                calendar_rows.push(Vec::new())
+            }
+            let current_row = calendar_rows.get_mut(row_count).unwrap();
+
+            if row_count == 0 && start_weekday < current_row.len() as u32 {
+                current_row.push(Cell::from("  "));
+            } else {
+                current_row.push(Cell::from(format!("{}", day_count)));
+                day_count += 1;
+            }
+            if current_row.len() == 7 {
+                row_count += 1;
+            }
+        }
+        println!("{:?}", calendar_rows);
+        calendar_rows
+            .into_iter()
+            .map(|cells| Row::new(cells))
+            .collect()
     }
 }
 
@@ -86,7 +116,7 @@ impl MockComponent for Calendar {
                 .constraints([Constraint::Min(0)].as_ref())
                 .split(area);
             frame.render_widget(
-                Table::new(vec![])
+                Table::new(Calendar::create_calendar_rows(2022, 7))
                     .style(Style::default().fg(Color::White))
                     .header(Calendar::create_calendar_header())
                     .block(Block::default().title("Table"))
