@@ -1,7 +1,7 @@
 use crate::localization::fl;
 
 use self::attributes::CALENDAR_TITLE;
-use chrono::{Datelike, Month, NaiveDate, Weekday};
+use chrono::{Datelike, NaiveDate};
 use tui_realm_stdlib::utils::get_block;
 use tuirealm::{
     command::{Cmd, CmdResult},
@@ -60,7 +60,6 @@ impl Calendar {
     }
 
     fn days_in_month(year: i32, month: u32) -> i64 {
-        let year = 2018;
         if month == 12 {
             NaiveDate::from_ymd(year + 1, 1, 1)
         } else {
@@ -68,6 +67,14 @@ impl Calendar {
         }
         .signed_duration_since(NaiveDate::from_ymd(year, month, 1))
         .num_days()
+    }
+
+    fn cell_from_day_number<'a>(day_number: i64) -> Cell<'a> {
+        if day_number < 10 {
+            Cell::from(format!(" {}", day_number))
+        } else {
+            Cell::from(format!("{}", day_number))
+        }
     }
 
     fn create_calendar_rows<'a>(year: i32, month: u32) -> Vec<Row<'a>> {
@@ -84,17 +91,17 @@ impl Calendar {
             }
             let current_row = calendar_rows.get_mut(row_count).unwrap();
 
-            if row_count == 0 && start_weekday < current_row.len() as u32 {
+            if row_count == 0 && start_weekday > current_row.len() as u32 {
                 current_row.push(Cell::from("  "));
             } else {
-                current_row.push(Cell::from(format!("{}", day_count)));
+                current_row.push(Self::cell_from_day_number(day_count));
                 day_count += 1;
             }
             if current_row.len() == 7 {
                 row_count += 1;
             }
         }
-        println!("{:?}", calendar_rows);
+
         calendar_rows
             .into_iter()
             .map(|cells| Row::new(cells))
@@ -129,7 +136,7 @@ impl MockComponent for Calendar {
                         Constraint::Length(2),
                         Constraint::Length(2),
                     ])
-                    .column_spacing(1)
+                    .column_spacing(3)
                     .block(get_block(
                         Borders::default(),
                         Some((calendar_title, Alignment::Center)),
