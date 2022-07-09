@@ -1,8 +1,8 @@
+mod ascii;
 mod components;
 mod localization;
 mod messages;
 mod model;
-mod ascii;
 
 use anyhow::Result;
 use localization::setup_localization;
@@ -21,7 +21,7 @@ fn main() -> Result<()> {
                 error!("Failed due to: {}", err);
                 model.quit = true;
             }
-            Ok(messages) if messages.len() > 0 => {
+            Ok(messages) if !messages.is_empty() => {
                 model.redraw = true;
                 for msg in messages.into_iter() {
                     let mut msg = Some(msg);

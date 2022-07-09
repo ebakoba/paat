@@ -53,7 +53,7 @@ impl Model {
                     )
                     .split(chunks[1]);
                 app.view(&ComponentId::Header, f, chunks[0]);
-                app.view(&ComponentId::Calendar, f, input_chunks[0]);
+                app.view(&ComponentId::DepartureDate, f, input_chunks[0]);
             })
             .is_ok());
     }
@@ -70,12 +70,13 @@ impl Model {
             .is_ok());
         assert!(app
             .mount(
-                ComponentId::Calendar,
+                ComponentId::DepartureDate,
                 Box::new(DepartureDate::new()),
                 vec![]
             )
             .is_ok());
 
+        assert!(app.active(&ComponentId::DepartureDate).is_ok());
         app
     }
 }

@@ -11,16 +11,9 @@ use tuirealm::{
     AttrValue, Attribute, Frame, MockComponent, Props, State,
 };
 
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct Header {
     props: Props,
-}
-
-impl Default for Header {
-    fn default() -> Self {
-        Self {
-            props: Props::default(),
-        }
-    }
 }
 
 mod attributes {

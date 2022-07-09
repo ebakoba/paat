@@ -1,7 +1,7 @@
+use self::attributes::{CALENDAR_DATE, CALENDAR_TITLE};
 use crate::localization::fl;
-
-use self::attributes::CALENDAR_TITLE;
 use chrono::{Datelike, NaiveDate};
+use paat_core::datetime::get_naive_date_from_output_format;
 use tui_realm_stdlib::utils::get_block;
 use tuirealm::{
     command::{Cmd, CmdResult},
@@ -13,20 +13,14 @@ use tuirealm::{
     AttrValue, Attribute, Frame, MockComponent, Props, State,
 };
 
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct Calendar {
     props: Props,
 }
 
-impl Default for Calendar {
-    fn default() -> Self {
-        Self {
-            props: Props::default(),
-        }
-    }
-}
-
 mod attributes {
     pub const CALENDAR_TITLE: &str = "CALENDAR_TITLE";
+    pub const CALENDAR_DATE: &str = "CALENDAR_DATE";
 }
 
 impl Calendar {
@@ -37,6 +31,17 @@ impl Calendar {
         self.attr(
             Attribute::Custom(attributes::CALENDAR_TITLE),
             AttrValue::String(calendar_title.as_ref().to_string()),
+        );
+        self
+    }
+
+    pub fn calendar_date<S>(mut self, calendar_date: S) -> Self
+    where
+        S: AsRef<str>,
+    {
+        self.attr(
+            Attribute::Custom(attributes::CALENDAR_DATE),
+            AttrValue::String(calendar_date.as_ref().to_string()),
         );
         self
     }
@@ -69,15 +74,29 @@ impl Calendar {
         .num_days()
     }
 
-    fn cell_from_day_number<'a>(day_number: i64) -> Cell<'a> {
-        if day_number < 10 {
-            Cell::from(format!(" {}", day_number))
+    fn cell_from_day_number<'a>(&self, year: i32, month: u32, day_number: i64) -> Cell<'a> {
+        let date_string = if day_number < 10 {
+            format!(" {}", day_number)
         } else {
-            Cell::from(format!("{}", day_number))
+            format!("{}", day_number)
+        };
+        let date = NaiveDate::from_ymd(year, month, day_number as u32);
+        let current_value = get_naive_date_from_output_format(
+            &self
+                .props
+                .get(Attribute::Custom(CALENDAR_DATE))
+                .unwrap()
+                .unwrap_string(),
+        )
+        .unwrap();
+        if date == current_value {
+            Cell::from(date_string).style(Style::default().fg(Color::Green))
+        } else {
+            Cell::from(date_string)
         }
     }
 
-    fn create_calendar_rows<'a>(year: i32, month: u32) -> Vec<Row<'a>> {
+    fn create_calendar_rows<'a>(&self, year: i32, month: u32) -> Vec<Row<'a>> {
         let mut calendar_rows: Vec<Vec<Cell>> = Vec::new();
 
         let start_weekday = NaiveDate::from_ymd(year, month, 1)
@@ -94,7 +113,7 @@ impl Calendar {
             if row_count == 0 && start_weekday > current_row.len() as u32 {
                 current_row.push(Cell::from("  "));
             } else {
-                current_row.push(Self::cell_from_day_number(day_count));
+                current_row.push(self.cell_from_day_number(year, month, day_count));
                 day_count += 1;
             }
             if current_row.len() == 7 {
@@ -102,10 +121,7 @@ impl Calendar {
             }
         }
 
-        calendar_rows
-            .into_iter()
-            .map(|cells| Row::new(cells))
-            .collect()
+        calendar_rows.into_iter().map(Row::new).collect()
     }
 }
 
@@ -123,7 +139,7 @@ impl MockComponent for Calendar {
                 .constraints([Constraint::Min(0)].as_ref())
                 .split(area);
             frame.render_widget(
-                Table::new(Calendar::create_calendar_rows(2022, 7))
+                Table::new(self.create_calendar_rows(2022, 7))
                     .style(Style::default().fg(Color::White))
                     .header(Calendar::create_calendar_header())
                     .block(Block::default().title("Table"))
