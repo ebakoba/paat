@@ -1624,7 +1624,7 @@ dependencies = [
  "futures",
  "indicatif",
  "log",
- "paat-core 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "paat-core",
  "rodio",
  "tokio",
 ]
@@ -1632,25 +1632,6 @@ dependencies = [
 [[package]]
 name = "paat-core"
 version = "0.1.0"
-dependencies = [
- "anyhow",
- "chrono",
- "const_format",
- "futures",
- "log",
- "reqwest",
- "serde",
- "serde_json",
- "strum",
- "strum_macros",
- "tokio",
-]
-
-[[package]]
-name = "paat-core"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f7e3745fd08b4de859fa032fd234b6a4795adc341de57551cf77f3a1fe9b0c58"
 dependencies = [
  "anyhow",
  "chrono",
@@ -1679,7 +1660,7 @@ dependencies = [
  "image2ascii",
  "log",
  "once_cell",
- "paat-core 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "paat-core",
  "rust-embed",
  "tokio",
  "tui-realm-stdlib",

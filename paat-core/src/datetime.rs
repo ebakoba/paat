@@ -5,8 +5,16 @@ const OUTPUT_DATE_FORMAT: &str = "%Y-%m-%d";
 const DATETIME_FORMAT: &str = "%Y-%m-%dT%H:%M:%S%.f%z";
 const TIME_FORMAT: &str = "%H:%M";
 
+pub fn get_current_date() -> NaiveDate {
+    chrono::Utc::now().naive_local().date()
+}
+
 pub fn get_naive_date(input: &str) -> Result<NaiveDate, ParseError> {
     NaiveDate::parse_from_str(input, INPUT_DATE_FORMAT)
+}
+
+pub fn get_naive_date_from_output_format(input: &str) -> Result<NaiveDate, ParseError> {
+    NaiveDate::parse_from_str(input, OUTPUT_DATE_FORMAT)
 }
 
 pub fn get_local_datetime(input: &str) -> ParseResult<DateTime<Local>> {
