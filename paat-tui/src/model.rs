@@ -7,7 +7,7 @@ use tuirealm::{
     event::NoUserEvent,
     terminal::TerminalBridge,
     tui::layout::{Constraint, Direction, Layout},
-    Application, EventListenerCfg, Update,
+    Application, AttrValue, Attribute, EventListenerCfg, Update,
 };
 
 pub struct Model {
@@ -88,6 +88,17 @@ impl Update<Message> for Model {
             match msg {
                 Message::AppClose => {
                     self.quit = true;
+                    None
+                }
+                Message::DepartureDateChanged(new_departure_date) => {
+                    assert!(self
+                        .app
+                        .attr(
+                            &ComponentId::DepartureDate,
+                            Attribute::Value,
+                            AttrValue::String(new_departure_date)
+                        )
+                        .is_ok());
                     None
                 }
             }
