@@ -46,7 +46,7 @@ impl Model {
                     .margin(1)
                     .constraints(
                         [
-                            Constraint::Min(CALENDAR_WIDTH),
+                            Constraint::Length(CALENDAR_WIDTH),
                             Constraint::Ratio(1, 3),
                             Constraint::Ratio(1, 3),
                         ]

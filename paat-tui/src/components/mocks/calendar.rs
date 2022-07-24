@@ -1,14 +1,13 @@
 use self::attributes::CALENDAR_TITLE;
-use crate::{localization::fl, style::CALENDAR_WIDTH};
+use crate::localization::fl;
 use chrono::{Datelike, Duration, NaiveDate};
 use paat_core::datetime::{get_naive_date_from_output_format, naive_date_to_output_string};
-use tui_realm_stdlib::utils::get_block;
 use tuirealm::{
     command::{Cmd, CmdResult, Direction},
-    props::{Alignment, Borders, Color, Style},
+    props::{Alignment, Color, Style},
     tui::{
         layout::{Constraint, Direction as LayoutDirection, Layout, Rect},
-        widgets::{Block, Cell, Row, Table},
+        widgets::{Block, Borders, Cell, Paragraph, Row, Table},
     },
     AttrValue, Attribute, Frame, MockComponent, Props, State, StateValue,
 };
@@ -90,7 +89,7 @@ impl Calendar {
         .num_days()
     }
 
-    fn cell_from_day_number<'a>(&self, current_date: &NaiveDate, day_number: i64) -> Cell<'a> {
+    fn cell_from_day_number<'a>(current_date: &NaiveDate, day_number: i64) -> Cell<'a> {
         let year = current_date.year();
         let month = current_date.month();
         let date_string = if day_number < 10 {
@@ -106,7 +105,7 @@ impl Calendar {
         }
     }
 
-    fn create_calendar_rows<'a>(&self, current_date: &NaiveDate) -> Vec<Row<'a>> {
+    fn create_calendar_rows<'a>(current_date: &NaiveDate) -> Vec<Row<'a>> {
         let mut calendar_rows: Vec<Vec<Cell>> = Vec::new();
         let year = current_date.year();
         let month = current_date.month();
@@ -125,7 +124,7 @@ impl Calendar {
             if row_count == 0 && start_weekday > current_row.len() as u32 {
                 current_row.push(Cell::from("  "));
             } else {
-                current_row.push(self.cell_from_day_number(current_date, day_count));
+                current_row.push(Self::cell_from_day_number(current_date, day_count));
                 day_count += 1;
             }
             if current_row.len() == 7 {
@@ -145,18 +144,34 @@ impl MockComponent for Calendar {
                 .get(Attribute::Custom(CALENDAR_TITLE))
                 .unwrap()
                 .unwrap_string();
+            frame.render_widget(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(calendar_title)
+                    .title_alignment(Alignment::Center),
+                area,
+            );
             let vertical_chunks = Layout::default()
-                .direction(LayoutDirection::Horizontal)
-                .margin(0)
-                .constraints([Constraint::Min(CALENDAR_WIDTH)].as_ref())
+                .direction(LayoutDirection::Vertical)
+                .margin(1)
+                .constraints([Constraint::Length(3), Constraint::Min(0)].as_ref())
                 .split(area);
             let current_value =
                 get_naive_date_from_output_format(&self.states.selected_date).unwrap();
+
+            let month_name_layout = Layout::default()
+                .direction(LayoutDirection::Horizontal)
+                .margin(1)
+                .constraints([Constraint::Ratio(1, 1)].as_ref())
+                .split(vertical_chunks[0]);
             frame.render_widget(
-                Table::new(self.create_calendar_rows(&current_value))
+                Paragraph::new("some-month").alignment(Alignment::Center),
+                month_name_layout[0],
+            );
+            frame.render_widget(
+                Table::new(Self::create_calendar_rows(&current_value))
                     .style(Style::default().fg(Color::White))
                     .header(Calendar::create_calendar_header())
-                    .block(Block::default().title("Table"))
                     .widths(&[
                         Constraint::Length(2),
                         Constraint::Length(2),
@@ -167,14 +182,8 @@ impl MockComponent for Calendar {
                         Constraint::Length(2),
                     ])
                     .column_spacing(3)
-                    .block(get_block(
-                        Borders::default(),
-                        Some((calendar_title, Alignment::Center)),
-                        false,
-                        None,
-                    ))
                     .style(Style::default()),
-                vertical_chunks[0],
+                vertical_chunks[1],
             );
         }
     }
