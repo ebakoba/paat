@@ -1,6 +1,7 @@
 use self::attributes::CALENDAR_TITLE;
 use crate::localization::fl;
 use chrono::{Datelike, Duration, NaiveDate};
+use once_cell::sync::Lazy;
 use paat_core::datetime::{get_naive_date_from_output_format, naive_date_to_output_string};
 use tuirealm::{
     command::{Cmd, CmdResult, Direction},
@@ -11,6 +12,23 @@ use tuirealm::{
     },
     AttrValue, Attribute, Frame, MockComponent, Props, State, StateValue,
 };
+
+static MONTH_NAMES: Lazy<Vec<String>> = Lazy::new(|| {
+    vec![
+        fl!("january"),
+        fl!("february"),
+        fl!("march"),
+        fl!("april"),
+        fl!("may"),
+        fl!("june"),
+        fl!("july"),
+        fl!("august"),
+        fl!("september"),
+        fl!("october"),
+        fl!("november"),
+        fl!("december"),
+    ]
+});
 
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Calendar {
@@ -75,6 +93,10 @@ impl Calendar {
             .map(|letter| Cell::from(format!(" {}", letter)))
             .collect();
         Row::new(cells).style(Style::default().fg(Color::Yellow))
+    }
+
+    fn month_name(month_number: u32) -> String {
+        MONTH_NAMES[month_number as usize].to_string()
     }
 
     fn days_in_month(current_date: &NaiveDate) -> i64 {
@@ -146,7 +168,7 @@ impl MockComponent for Calendar {
                 .unwrap_string();
             frame.render_widget(
                 Block::default()
-                    .borders(Borders::ALL)
+                    .borders(Borders::TOP)
                     .title(calendar_title)
                     .title_alignment(Alignment::Center),
                 area,
@@ -154,20 +176,40 @@ impl MockComponent for Calendar {
             let vertical_chunks = Layout::default()
                 .direction(LayoutDirection::Vertical)
                 .margin(1)
-                .constraints([Constraint::Length(3), Constraint::Min(0)].as_ref())
+                .constraints(
+                    [
+                        Constraint::Length(3),
+                        Constraint::Length(2),
+                        Constraint::Length(30),
+                    ]
+                    .as_ref(),
+                )
                 .split(area);
             let current_value =
                 get_naive_date_from_output_format(&self.states.selected_date).unwrap();
 
-            let month_name_layout = Layout::default()
+            let year_layout = Layout::default()
                 .direction(LayoutDirection::Horizontal)
                 .margin(1)
-                .constraints([Constraint::Ratio(1, 1)].as_ref())
+                .constraints([Constraint::Length(10)].as_ref())
                 .split(vertical_chunks[0]);
+            let year = current_value.year();
             frame.render_widget(
-                Paragraph::new("some-month").alignment(Alignment::Center),
-                month_name_layout[0],
+                Paragraph::new(format!("{}", year)).alignment(Alignment::Center),
+                year_layout[0],
             );
+
+            let month_layout = Layout::default()
+                .direction(LayoutDirection::Horizontal)
+                .margin(0)
+                .constraints([Constraint::Length(10)].as_ref())
+                .split(vertical_chunks[1]);
+            frame.render_widget(
+                Paragraph::new(Self::month_name(current_value.month0()))
+                    .alignment(Alignment::Center),
+                month_layout[0],
+            );
+
             frame.render_widget(
                 Table::new(Self::create_calendar_rows(&current_value))
                     .style(Style::default().fg(Color::White))
@@ -183,7 +225,7 @@ impl MockComponent for Calendar {
                     ])
                     .column_spacing(3)
                     .style(Style::default()),
-                vertical_chunks[1],
+                vertical_chunks[2],
             );
         }
     }
