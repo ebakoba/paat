@@ -1,5 +1,5 @@
 use self::attributes::CALENDAR_TITLE;
-use crate::localization::fl;
+use crate::{localization::fl, style::CALENDAR_WIDTH};
 use chrono::{Datelike, Duration, NaiveDate};
 use paat_core::datetime::{get_naive_date_from_output_format, naive_date_to_output_string};
 use tui_realm_stdlib::utils::get_block;
@@ -148,7 +148,7 @@ impl MockComponent for Calendar {
             let vertical_chunks = Layout::default()
                 .direction(LayoutDirection::Horizontal)
                 .margin(0)
-                .constraints([Constraint::Min(0)].as_ref())
+                .constraints([Constraint::Min(CALENDAR_WIDTH)].as_ref())
                 .split(area);
             let current_value =
                 get_naive_date_from_output_format(&self.states.selected_date).unwrap();

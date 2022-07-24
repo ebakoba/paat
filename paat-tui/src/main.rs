@@ -3,6 +3,7 @@ mod components;
 mod localization;
 mod messages;
 mod model;
+mod style;
 
 use anyhow::Result;
 use localization::setup_localization;
