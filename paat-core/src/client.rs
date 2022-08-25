@@ -1,6 +1,9 @@
 use crate::{
     datetime::naive_date_to_output_string,
-    types::event::{Direction, EventMap, EventResponse, WaitForSpot},
+    types::{
+        event::{EventMap, EventResponse, WaitForSpot},
+        Direction,
+    },
     url::EVENTS_URL,
 };
 use anyhow::{anyhow, Result};
