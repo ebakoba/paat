@@ -2,8 +2,9 @@ use anyhow::{anyhow, Result};
 use chrono::NaiveDate;
 use dialoguer::{theme::ColorfulTheme, Input, Select};
 use paat_core::{
+    constants::LINES,
     datetime::{get_current_date, get_naive_date, naive_date_to_input_string},
-    types::event::{Direction, Event},
+    types::{event::Event, Direction},
 };
 use std::{collections::HashMap, io, str::FromStr};
 
@@ -20,16 +21,10 @@ pub fn input_departure_date() -> io::Result<NaiveDate> {
 }
 
 pub fn input_direction() -> io::Result<Direction> {
-    let directions = [
-        "Heltermaa - Rohuküla",
-        "Rohuküla - Heltermaa",
-        "Kuivastu - Virtsu",
-        "Virtsu - Kuivastu",
-    ];
     let selection = Select::with_theme(&ColorfulTheme::default())
-        .items(&directions)
+        .items(&LINES)
         .interact()?;
-    let direction = Direction::from_str(directions[selection])
+    let direction = Direction::from_str(LINES[selection])
         .map_err(|_| io::Error::new(io::ErrorKind::Unsupported, "Unknown direction"))?;
 
     println!("Direction: {}", direction);

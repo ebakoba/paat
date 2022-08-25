@@ -4,7 +4,7 @@ mod output;
 mod sound;
 
 use crate::{
-    constants::{TICK_TIMEOUT, TIMEOUT_BETWEEN_REQUESTS},
+    constants::{TICK_TIMEOUT_DURATION, TIMEOUT_BETWEEN_REQUESTS},
     inputs::{input_departure_date, input_direction},
 };
 use anyhow::{anyhow, Result};
@@ -27,7 +27,7 @@ async fn main() -> Result<()> {
 
     let selected_event = input_event(event_map)?;
     let progress_bar = ProgressBar::new_spinner();
-    progress_bar.enable_steady_tick(TICK_TIMEOUT);
+    progress_bar.enable_steady_tick(*TICK_TIMEOUT_DURATION);
 
     let mut wait_stream =
         Box::pin(client.create_wait_stream(&departure_date, &direction, &selected_event.uuid));
