@@ -24,7 +24,7 @@ impl DepartureDate {
 }
 
 impl Component<Message, NoUserEvent> for DepartureDate {
-    fn on(&mut self, event: tuirealm::Event<NoUserEvent>) -> Option<Message> {
+    fn on(&mut self, event: Event<NoUserEvent>) -> Option<Message> {
         if let Some(message) = close_event_matcher(event.clone(), |_| None) {
             return Some(message);
         }
@@ -46,12 +46,19 @@ impl Component<Message, NoUserEvent> for DepartureDate {
                 code: Key::Down,
                 modifiers: KeyModifiers::NONE,
             }) => Cmd::Move(Direction::Down),
+            Event::Keyboard(KeyEvent {
+                code: Key::Enter,
+                modifiers: KeyModifiers::NONE,
+            }) => Cmd::Submit,
             _ => Cmd::None,
         };
 
         match self.perform(command) {
             CmdResult::Changed(State::One(StateValue::String(departure_date))) => {
                 Some(Message::DepartureDateChanged(departure_date))
+            }
+            CmdResult::Submit(State::One(StateValue::String(departure_date))) => {
+                Some(Message::DepartureDateSubmitted(departure_date))
             }
             _ => None,
         }

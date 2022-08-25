@@ -2,4 +2,5 @@
 pub enum Message {
     AppClose,
     DepartureDateChanged(String),
+    DepartureDateSubmitted(String),
 }

@@ -1,5 +1,5 @@
 use crate::{
-    components::{AppHeader, ComponentId, DepartureDate},
+    components::{AppHeader, ComponentId, DepartureDate, SelectFerry, SelectLine},
     messages::Message,
     style::CALENDAR_WIDTH,
 };
@@ -7,7 +7,7 @@ use std::time::Duration;
 use tuirealm::{
     event::NoUserEvent,
     terminal::TerminalBridge,
-    tui::layout::{Constraint, Direction, Layout},
+    tui::layout::{Alignment, Constraint, Direction, Layout},
     Application, AttrValue, Attribute, EventListenerCfg, Update,
 };
 
@@ -41,20 +41,28 @@ impl Model {
                     .margin(1)
                     .constraints([Constraint::Length(14), Constraint::Length(14)].as_ref())
                     .split(f.size());
+                let vertical_fixer = Layout::default()
+                    .direction(Direction::Vertical)
+                    .margin(1)
+                    .constraints([Constraint::Max(35)].as_ref())
+                    .split(chunks[1]);
                 let input_chunks = Layout::default()
                     .direction(Direction::Horizontal)
                     .margin(1)
                     .constraints(
                         [
                             Constraint::Length(CALENDAR_WIDTH),
-                            Constraint::Ratio(1, 3),
-                            Constraint::Ratio(1, 3),
+                            Constraint::Ratio(1, 4),
+                            Constraint::Ratio(1, 4),
+                            Constraint::Ratio(1, 4),
                         ]
                         .as_ref(),
                     )
-                    .split(chunks[1]);
+                    .split(vertical_fixer[0]);
                 app.view(&ComponentId::Header, f, chunks[0]);
                 app.view(&ComponentId::DepartureDate, f, input_chunks[0]);
+                app.view(&ComponentId::SelectLine, f, input_chunks[1]);
+                app.view(&ComponentId::SelectFerry, f, input_chunks[2]);
             })
             .is_ok());
     }
@@ -73,6 +81,20 @@ impl Model {
             .mount(
                 ComponentId::DepartureDate,
                 Box::new(DepartureDate::new()),
+                vec![]
+            )
+            .is_ok());
+        assert!(app
+            .mount(
+                ComponentId::SelectFerry,
+                Box::new(SelectFerry::default()),
+                vec![]
+            )
+            .is_ok());
+        assert!(app
+            .mount(
+                ComponentId::SelectLine,
+                Box::new(SelectLine::default()),
                 vec![]
             )
             .is_ok());
@@ -98,6 +120,18 @@ impl Update<Message> for Model {
                             &ComponentId::DepartureDate,
                             Attribute::Value,
                             AttrValue::String(new_departure_date)
+                        )
+                        .is_ok());
+                    None
+                }
+                Message::DepartureDateSubmitted(departure_date) => {
+                    assert!(self.app.active(&ComponentId::SelectLine).is_ok());
+                    assert!(self
+                        .app
+                        .attr(
+                            &ComponentId::SelectFerry,
+                            Attribute::Title,
+                            AttrValue::Title((departure_date, Alignment::Center))
                         )
                         .is_ok());
                     None

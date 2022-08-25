@@ -260,6 +260,7 @@ impl MockComponent for Calendar {
                 self.states.change_date(7);
                 CmdResult::Changed(self.state())
             }
+            Cmd::Submit => CmdResult::Submit(self.state()),
             _ => CmdResult::None,
         }
     }
