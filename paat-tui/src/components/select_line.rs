@@ -43,7 +43,7 @@ impl Default for SelectLine {
                 .title(fl!("select-line"), Alignment::Center)
                 .scroll(true)
                 .highlighted_color(Color::LightYellow)
-                .highlighted_str("🚀")
+                .highlighted_str("🏄‍♂️")
                 .rewind(true)
                 .step(4)
                 .rows(Self::create_table())
