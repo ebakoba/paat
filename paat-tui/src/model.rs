@@ -6,6 +6,7 @@ use crate::{
 use std::time::Duration;
 use tuirealm::{
     event::NoUserEvent,
+    props::{PropPayload, PropValue},
     terminal::TerminalBridge,
     tui::layout::{Alignment, Constraint, Direction, Layout},
     Application, AttrValue, Attribute, EventListenerCfg, Update,
@@ -86,19 +87,18 @@ impl Model {
             .is_ok());
         assert!(app
             .mount(
-                ComponentId::SelectFerry,
-                Box::new(SelectFerry::default()),
-                vec![]
-            )
-            .is_ok());
-        assert!(app
-            .mount(
                 ComponentId::SelectLine,
                 Box::new(SelectLine::default()),
                 vec![]
             )
             .is_ok());
-
+        assert!(app
+            .mount(
+                ComponentId::SelectFerry,
+                Box::new(SelectFerry::default()),
+                vec![]
+            )
+            .is_ok());
         assert!(app.active(&ComponentId::DepartureDate).is_ok());
         app
     }
@@ -134,6 +134,29 @@ impl Update<Message> for Model {
                             AttrValue::Title((departure_date, Alignment::Center))
                         )
                         .is_ok());
+                    None
+                }
+                Message::LineChanged(line_index) => {
+                    assert!(self
+                        .app
+                        .attr(
+                            &ComponentId::SelectLine,
+                            Attribute::Value,
+                            AttrValue::Payload(PropPayload::One(PropValue::Usize(line_index)))
+                        )
+                        .is_ok());
+                    None
+                }
+                Message::LineSubmitted(line_index) => {
+                    assert!(self
+                        .app
+                        .attr(
+                            &ComponentId::SelectLine,
+                            Attribute::Value,
+                            AttrValue::Payload(PropPayload::One(PropValue::Usize(line_index)))
+                        )
+                        .is_ok());
+                    assert!(self.app.active(&ComponentId::SelectFerry).is_ok());
                     None
                 }
             }
