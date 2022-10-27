@@ -3,6 +3,7 @@ mod components;
 mod localization;
 mod messages;
 mod model;
+mod ports;
 mod style;
 
 use anyhow::Result;

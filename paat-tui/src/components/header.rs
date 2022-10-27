@@ -1,4 +1,4 @@
-use crate::{localization::fl, messages::Message};
+use crate::{localization::fl, messages::Message, ports::ApiEvent};
 
 use super::mocks::Header;
 use tuirealm::{Component, MockComponent, NoUserEvent};
@@ -18,8 +18,8 @@ impl AppHeader {
     }
 }
 
-impl Component<Message, NoUserEvent> for AppHeader {
-    fn on(&mut self, _: tuirealm::Event<NoUserEvent>) -> Option<Message> {
+impl Component<Message, ApiEvent> for AppHeader {
+    fn on(&mut self, _: tuirealm::Event<ApiEvent>) -> Option<Message> {
         None
     }
 }

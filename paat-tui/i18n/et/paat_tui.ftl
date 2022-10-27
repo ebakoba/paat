@@ -22,4 +22,4 @@ october = OKTOOBER
 november = NOVEMBER
 december = DETSEMBER
 select-line = Vali liin
-start-by-select-date-and-line = Alustuseks vali kuupäev ja liin
+select-date-first = = Alustuseks vali kuupäev

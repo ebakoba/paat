@@ -1,19 +1,19 @@
-mod constants;
 mod inputs;
 mod output;
 mod sound;
 
-use crate::{
-    constants::{TICK_TIMEOUT_DURATION, TIMEOUT_BETWEEN_REQUESTS},
-    inputs::{input_departure_date, input_direction},
-};
+use crate::inputs::{input_departure_date, input_direction};
 use anyhow::{anyhow, Result};
 use env_logger::init;
 use futures::StreamExt;
 use indicatif::ProgressBar;
 use inputs::input_event;
 use output::create_final_output;
-use paat_core::{client::Client, types::event::WaitForSpot};
+use paat_core::{
+    client::Client,
+    constants::{TICK_TIMEOUT_DURATION, TIMEOUT_BETWEEN_REQUESTS},
+    types::event::WaitForSpot,
+};
 use std::time::Duration;
 
 #[tokio::main]

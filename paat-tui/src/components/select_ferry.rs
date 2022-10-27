@@ -14,6 +14,7 @@ use tuirealm::tui::layout::{Constraint, Direction as LayoutDirection, Layout};
 
 use crate::localization::fl;
 use crate::messages::Message;
+use crate::ports::ApiEvent;
 
 use super::close_event_matcher;
 
@@ -31,7 +32,7 @@ impl Default for SelectFerry {
                         .modifiers(BorderType::Rounded)
                         .color(Color::Yellow),
                 )
-                .title(fl!("start-by-select-date-and-line"), Alignment::Center)
+                .title(fl!("select-date-first"), Alignment::Center)
                 .scroll(true)
                 .highlighted_color(Color::LightYellow)
                 .highlighted_str("🚀")
@@ -97,8 +98,8 @@ impl Default for SelectFerry {
     }
 }
 
-impl Component<Message, NoUserEvent> for SelectFerry {
-    fn on(&mut self, event: Event<NoUserEvent>) -> Option<Message> {
+impl Component<Message, ApiEvent> for SelectFerry {
+    fn on(&mut self, event: Event<ApiEvent>) -> Option<Message> {
         if let Some(message) = close_event_matcher(event.clone(), |_| None) {
             return Some(message);
         }

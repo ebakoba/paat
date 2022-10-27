@@ -4,7 +4,7 @@ mod mocks;
 mod select_ferry;
 mod select_line;
 
-use crate::messages::Message;
+use crate::{messages::Message, ports::ApiEvent};
 pub use departure_date::DepartureDate;
 pub use header::AppHeader;
 pub use select_ferry::SelectFerry;
@@ -23,9 +23,9 @@ pub enum ComponentId {
     SelectLine,
 }
 
-pub fn close_event_matcher<F>(event: Event<NoUserEvent>, rest_of_match: F) -> Option<Message>
+pub fn close_event_matcher<F>(event: Event<ApiEvent>, rest_of_match: F) -> Option<Message>
 where
-    F: Fn(Event<NoUserEvent>) -> Option<Message>,
+    F: Fn(Event<ApiEvent>) -> Option<Message>,
 {
     match event {
         Event::Keyboard(KeyEvent {

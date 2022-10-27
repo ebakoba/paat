@@ -1,10 +1,10 @@
 use crate::datetime::service_datetime_to_local_time_string;
 use serde::{Deserialize, Serialize};
 use std::{
-    collections::HashMap,
+    collections::BTreeMap,
     fmt::{Display, Formatter, Result},
 };
-#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Capacity {
     #[serde(rename(deserialize = "pcs"))]
     pub passangers: i32,
@@ -18,12 +18,12 @@ pub struct Capacity {
     pub dc: i32,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct CodeWrapper {
     code: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Event {
     #[serde(rename(deserialize = "uid"))]
     pub uuid: String,
@@ -40,7 +40,7 @@ pub struct Event {
     pub end: String,
 }
 
-pub type EventMap = HashMap<String, Event>;
+pub type EventMap = BTreeMap<String, Event>;
 
 pub enum WaitForSpot {
     Done(usize),

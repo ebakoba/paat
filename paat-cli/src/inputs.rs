@@ -4,9 +4,12 @@ use dialoguer::{theme::ColorfulTheme, Input, Select};
 use paat_core::{
     constants::LINES,
     datetime::{get_current_date, get_naive_date, naive_date_to_input_string},
-    types::{event::Event, Direction},
+    types::{
+        event::{Event, EventMap},
+        Direction,
+    },
 };
-use std::{collections::HashMap, io, str::FromStr};
+use std::{io, str::FromStr};
 
 pub fn input_departure_date() -> io::Result<NaiveDate> {
     let current_date = get_current_date();
@@ -31,7 +34,7 @@ pub fn input_direction() -> io::Result<Direction> {
     Ok(direction)
 }
 
-pub fn input_event(event_map: HashMap<String, Event>) -> Result<Event> {
+pub fn input_event(event_map: EventMap) -> Result<Event> {
     let mut events = event_map.values().collect::<Vec<&Event>>();
     if events.is_empty() {
         println!("No ferry times found for that date");

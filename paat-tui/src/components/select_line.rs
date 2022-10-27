@@ -1,6 +1,7 @@
 use super::close_event_matcher;
 use crate::localization::fl;
 use crate::messages::Message;
+use crate::ports::ApiEvent;
 use paat_core::constants::LINES;
 use tui_realm_stdlib::List;
 use tuirealm::command::{Cmd, CmdResult, Direction};
@@ -8,7 +9,7 @@ use tuirealm::event::KeyModifiers;
 use tuirealm::props::{Alignment, BorderType, Borders, Color, Table, TableBuilder, TextSpan};
 use tuirealm::{
     event::{Key, KeyEvent},
-    Component, Event, MockComponent, NoUserEvent,
+    Component, Event, MockComponent,
 };
 use tuirealm::{State, StateValue};
 
@@ -50,8 +51,8 @@ impl Default for SelectLine {
     }
 }
 
-impl Component<Message, NoUserEvent> for SelectLine {
-    fn on(&mut self, event: Event<NoUserEvent>) -> Option<Message> {
+impl Component<Message, ApiEvent> for SelectLine {
+    fn on(&mut self, event: Event<ApiEvent>) -> Option<Message> {
         if let Some(message) = close_event_matcher(event.clone(), |_| None) {
             return Some(message);
         }
@@ -68,16 +69,13 @@ impl Component<Message, NoUserEvent> for SelectLine {
             Event::Keyboard(KeyEvent {
                 code: Key::Enter,
                 modifiers: KeyModifiers::NONE,
-            }) => Cmd::Submit,
+            }) => return Some(Message::LineSubmitted),
             _ => Cmd::None,
         };
 
         match self.perform(command) {
             CmdResult::Changed(State::One(StateValue::Usize(line_index))) => {
                 Some(Message::LineChanged(line_index))
-            }
-            CmdResult::Submit(State::One(StateValue::Usize(line))) => {
-                Some(Message::LineSubmitted(line))
             }
             _ => None,
         }

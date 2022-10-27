@@ -25,4 +25,4 @@ october = OCTOBER
 november = NOVEMBER
 december = DECEMBER
 select-line = Select Line
-start-by-select-date-and-line = Start by selecting a date and a line
+select-date-first = Select date first

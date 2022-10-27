@@ -1,5 +1,5 @@
 use super::{close_event_matcher, mocks::Calendar};
-use crate::{localization::fl, messages::Message};
+use crate::{localization::fl, messages::Message, ports::ApiEvent};
 use paat_core::datetime::{get_current_date, naive_date_to_output_string};
 use tuirealm::{
     command::{Cmd, CmdResult, Direction},
@@ -23,8 +23,8 @@ impl DepartureDate {
     }
 }
 
-impl Component<Message, NoUserEvent> for DepartureDate {
-    fn on(&mut self, event: Event<NoUserEvent>) -> Option<Message> {
+impl Component<Message, ApiEvent> for DepartureDate {
+    fn on(&mut self, event: Event<ApiEvent>) -> Option<Message> {
         if let Some(message) = close_event_matcher(event.clone(), |_| None) {
             return Some(message);
         }

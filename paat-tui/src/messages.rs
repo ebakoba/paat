@@ -4,5 +4,5 @@ pub enum Message {
     DepartureDateChanged(String),
     DepartureDateSubmitted(String),
     LineChanged(usize),
-    LineSubmitted(usize),
+    LineSubmitted,
 }

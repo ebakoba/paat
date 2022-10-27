@@ -1,22 +1,35 @@
 use crate::{
     components::{AppHeader, ComponentId, DepartureDate, SelectFerry, SelectLine},
     messages::Message,
+    ports::{ApiClient, ApiEvent},
     style::CALENDAR_WIDTH,
+};
+use chrono::NaiveDate;
+use paat_core::{
+    datetime::{get_naive_date, get_naive_date_from_output_format},
+    types::Direction as PaatDirection,
 };
 use std::time::Duration;
 use tuirealm::{
-    event::NoUserEvent,
     props::{PropPayload, PropValue},
     terminal::TerminalBridge,
     tui::layout::{Alignment, Constraint, Direction, Layout},
     Application, AttrValue, Attribute, EventListenerCfg, Update,
 };
 
+#[derive(Clone, Default)]
+pub struct AppState {
+    intermediate_line_index: Option<usize>,
+    departure_date: Option<NaiveDate>,
+    direction: Option<PaatDirection>,
+}
+
 pub struct Model {
-    pub app: Application<ComponentId, Message, NoUserEvent>,
+    pub app: Application<ComponentId, Message, ApiEvent>,
     pub quit: bool,
     pub redraw: bool,
     pub terminal: TerminalBridge,
+    pub state: AppState,
 }
 
 impl Default for Model {
@@ -26,6 +39,7 @@ impl Default for Model {
             quit: false,
             redraw: true,
             terminal: TerminalBridge::new().expect("Cannot initialize terminal"),
+            state: AppState::default(),
         }
     }
 }
@@ -68,8 +82,26 @@ impl Model {
             .is_ok());
     }
 
-    fn init_app() -> Application<ComponentId, Message, NoUserEvent> {
-        let mut app: Application<ComponentId, Message, NoUserEvent> = Application::init(
+    fn configure_listener(&mut self) {
+        if let Some(departure_date) = self.state.departure_date {
+            if let Some(direction) = self.state.direction {
+                let api_client = ApiClient::try_new(departure_date, direction).unwrap();
+                assert!(self
+                    .app
+                    .restart_listener(
+                        EventListenerCfg::default()
+                            .default_input_listener(Duration::from_millis(20))
+                            .poll_timeout(Duration::from_millis(10))
+                            .tick_interval(Duration::from_secs(1))
+                            .port(Box::new(api_client), Duration::from_millis(100)),
+                    )
+                    .is_ok());
+            }
+        }
+    }
+
+    fn init_app() -> Application<ComponentId, Message, ApiEvent> {
+        let mut app: Application<ComponentId, Message, ApiEvent> = Application::init(
             EventListenerCfg::default()
                 .default_input_listener(Duration::from_millis(20))
                 .poll_timeout(Duration::from_millis(10))
@@ -131,9 +163,11 @@ impl Update<Message> for Model {
                         .attr(
                             &ComponentId::SelectFerry,
                             Attribute::Title,
-                            AttrValue::Title((departure_date, Alignment::Center))
+                            AttrValue::Title((departure_date.clone(), Alignment::Center))
                         )
                         .is_ok());
+                    self.state.departure_date =
+                        get_naive_date_from_output_format(&departure_date).ok();
                     None
                 }
                 Message::LineChanged(line_index) => {
@@ -145,17 +179,15 @@ impl Update<Message> for Model {
                             AttrValue::Payload(PropPayload::One(PropValue::Usize(line_index)))
                         )
                         .is_ok());
+                    self.state.intermediate_line_index = Some(line_index);
                     None
                 }
-                Message::LineSubmitted(line_index) => {
-                    assert!(self
-                        .app
-                        .attr(
-                            &ComponentId::SelectLine,
-                            Attribute::Value,
-                            AttrValue::Payload(PropPayload::One(PropValue::Usize(line_index)))
-                        )
-                        .is_ok());
+                Message::LineSubmitted => {
+                    self.state.direction = self
+                        .state
+                        .intermediate_line_index
+                        .and_then(|line_index| PaatDirection::get_line_by_index(line_index));
+                    self.configure_listener();
                     assert!(self.app.active(&ComponentId::SelectFerry).is_ok());
                     None
                 }

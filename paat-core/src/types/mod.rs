@@ -1,4 +1,6 @@
 pub mod event;
+use crate::constants::LINES;
+use std::str::FromStr;
 use strum_macros::{Display, EnumProperty, EnumString};
 
 #[derive(Display, Debug, Clone, Copy, EnumString, EnumProperty)]
@@ -11,4 +13,16 @@ pub enum Direction {
     KV,
     #[strum(props(Abbreviation = "VK"), to_string = "Virtsu - Kuivastu")]
     VK,
+}
+
+impl Direction {
+    pub fn get_line_by_index(index: usize) -> Option<Self> {
+        if index >= LINES.len() {
+            return None;
+        }
+        if let Ok(direction) = Self::from_str(LINES[index]) {
+            return Some(direction);
+        }
+        None
+    }
 }
