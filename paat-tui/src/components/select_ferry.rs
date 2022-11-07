@@ -1,17 +1,15 @@
-use std::time::Duration;
-
+use paat_core::types::event::EventMap;
 use tui_realm_stdlib::List;
 use tuirealm::command::{Cmd, CmdResult, Direction, Position};
+use tuirealm::event::KeyModifiers;
 use tuirealm::props::{Alignment, BorderType, Borders, Color, TableBuilder, TextSpan};
-use tuirealm::terminal::TerminalBridge;
 use tuirealm::{
     application::PollStrategy,
     event::{Key, KeyEvent},
     Application, Component, Event, EventListenerCfg, MockComponent, NoUserEvent, Update,
 };
+use tuirealm::{AttrValue, Attribute, State, StateValue};
 // tui
-use tuirealm::tui::layout::{Constraint, Direction as LayoutDirection, Layout};
-
 use crate::localization::fl;
 use crate::messages::Message;
 use crate::ports::ApiEvent;
@@ -21,6 +19,23 @@ use super::close_event_matcher;
 #[derive(MockComponent)]
 pub struct SelectFerry {
     component: List,
+}
+
+impl SelectFerry {
+    pub fn build_table_rows(events: EventMap) -> (Attribute, AttrValue) {
+        let mut events = events
+            .values()
+            .collect::<Vec<&paat_core::types::event::Event>>();
+        events.sort_by_key(|event| event.start.clone());
+        let mut builder = TableBuilder::default();
+        for event in events {
+            builder
+                .add_col(TextSpan::from(format!("{}", event)))
+                .add_row();
+        }
+        let table_rows = builder.build();
+        (Attribute::Content, AttrValue::Table(table_rows))
+    }
 }
 
 impl Default for SelectFerry {
@@ -38,62 +53,8 @@ impl Default for SelectFerry {
                 .highlighted_str("🚀")
                 .rewind(true)
                 .step(4)
-                .rows(
-                    TableBuilder::default()
-                        .add_col(TextSpan::from("01").fg(Color::Cyan).italic())
-                        .add_col(TextSpan::from(" "))
-                        .add_col(TextSpan::from("Lorem ipsum dolor sit amet, consectetur adipiscing elit"))
-                        .add_row()
-                        .add_col(TextSpan::from("02").fg(Color::Cyan).italic())
-                        .add_col(TextSpan::from(" "))
-                        .add_col(TextSpan::from("Maecenas tincidunt dui ut gravida fringilla"))
-                        .add_row()
-                        .add_col(TextSpan::from("03").fg(Color::Cyan).italic())
-                        .add_col(TextSpan::from(" "))
-                        .add_col(TextSpan::from("Duis est neque, fringilla sit amet enim id, congue hendrerit mauris"))
-                        .add_row()
-                        .add_col(TextSpan::from("04").fg(Color::Cyan).italic())
-                        .add_col(TextSpan::from(" "))
-                        .add_col(TextSpan::from("Nulla facilisi. Vestibulum tincidunt tempor orci, in pellentesque lacus placerat id."))
-                        .add_row()
-                        .add_col(TextSpan::from("05").fg(Color::Cyan).italic())
-                        .add_col(TextSpan::from(" "))
-                        .add_col(TextSpan::from("Integer at nisl scelerisque, egestas ipsum in, iaculis tellus. Pellentesque tincidunt vestibulum nisi, ut vehicula augue scelerisque at"))
-                        .add_row()
-                        .add_col(TextSpan::from("06").fg(Color::Cyan).italic())
-                        .add_col(TextSpan::from(" "))
-                        .add_col(TextSpan::from("Quisque quis tincidunt tellus. Nam accumsan leo non nunc finibus feugiat."))
-                        .add_row()
-                        .add_col(TextSpan::from("07").fg(Color::Cyan).italic())
-                        .add_col(TextSpan::from(" "))
-                        .add_col(TextSpan::from("non lacus ac orci fermentum aliquam ut feugiat libero. Suspendisse eget nunc in erat molestie egestas eu at massa"))
-                        .add_row()
-                        .add_col(TextSpan::from("08").fg(Color::Cyan).italic())
-                        .add_col(TextSpan::from(" "))
-                        .add_col(TextSpan::from("Donec feugiat dui quis libero ornare, vel sodales mauris ornare."))
-                        .add_row()
-                        .add_col(TextSpan::from("09").fg(Color::Cyan).italic())
-                        .add_col(TextSpan::from(" "))
-                        .add_col(TextSpan::from("Aenean tempor porta nisi, at sodales eros semper ut. Vivamus sit amet commodo risus"))
-                        .add_row()
-                        .add_col(TextSpan::from("10").fg(Color::Cyan).italic())
-                        .add_col(TextSpan::from(" "))
-                        .add_col(TextSpan::from("Etiam urna nisi, ullamcorper at justo et, rhoncus pellentesque dui. Nunc ante velit, ultrices a ornare sit amet, sagittis in ex. Nam pulvinar tellus tortor. Praesent ac accumsan nunc, ac consectetur nisi."))
-                        .add_row()
-                        .add_col(TextSpan::from("11").fg(Color::Cyan).italic())
-                        .add_col(TextSpan::from(" "))
-                        .add_col(TextSpan::from("Proin non elit fermentum, pretium diam eget, facilisis mi"))
-                        .add_row()
-                        .add_col(TextSpan::from("12").fg(Color::Cyan).italic())
-                        .add_col(TextSpan::from(" "))
-                        .add_col(TextSpan::from("Duis suscipit nibh lacus, quis porta enim accumsan vel"))
-                        .add_row()
-                        .add_col(TextSpan::from("13").fg(Color::Cyan).italic())
-                        .add_col(TextSpan::from(" "))
-                        .add_col(TextSpan::from("Etiam volutpat magna tortor, a laoreet ex accumsan sit amet"))
-                        .build()
-                )
-                .selected_line(2),
+                .rows(TableBuilder::default().build())
+                .selected_line(0),
         }
     }
 }
@@ -104,6 +65,26 @@ impl Component<Message, ApiEvent> for SelectFerry {
             return Some(message);
         }
 
-        None
+        let command = match event {
+            Event::Keyboard(KeyEvent {
+                code: Key::Up,
+                modifiers: KeyModifiers::NONE,
+            }) => Cmd::Move(Direction::Up),
+            Event::Keyboard(KeyEvent {
+                code: Key::Down,
+                modifiers: KeyModifiers::NONE,
+            }) => Cmd::Move(Direction::Down),
+            Event::User(ApiEvent::FetchedEvents(events)) => {
+                return Some(Message::EventsReceived(events));
+            }
+            _ => Cmd::None,
+        };
+
+        match self.perform(command) {
+            CmdResult::Changed(State::One(StateValue::Usize(line_index))) => {
+                Some(Message::FerryChanged(line_index))
+            }
+            _ => None,
+        }
     }
 }

@@ -5,10 +5,7 @@ use crate::{
     style::CALENDAR_WIDTH,
 };
 use chrono::NaiveDate;
-use paat_core::{
-    datetime::{get_naive_date, get_naive_date_from_output_format},
-    types::Direction as PaatDirection,
-};
+use paat_core::{datetime::get_naive_date_from_output_format, types::Direction as PaatDirection};
 use std::time::Duration;
 use tuirealm::{
     props::{PropPayload, PropValue},
@@ -191,6 +188,15 @@ impl Update<Message> for Model {
                     assert!(self.app.active(&ComponentId::SelectFerry).is_ok());
                     None
                 }
+                Message::EventsReceived(events) => {
+                    let (attribute, value) = SelectFerry::build_table_rows(events);
+                    assert!(self
+                        .app
+                        .attr(&ComponentId::SelectFerry, attribute, value)
+                        .is_ok());
+                    None
+                }
+                _ => None,
             }
         } else {
             None

@@ -4,7 +4,7 @@ use paat_core::datetime::{get_current_date, naive_date_to_output_string};
 use tuirealm::{
     command::{Cmd, CmdResult, Direction},
     event::{Key, KeyEvent, KeyModifiers},
-    Component, Event, MockComponent, NoUserEvent, State, StateValue,
+    Component, Event, MockComponent, State, StateValue,
 };
 
 #[derive(MockComponent)]

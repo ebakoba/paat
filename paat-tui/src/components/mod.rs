@@ -11,10 +11,9 @@ pub use select_ferry::SelectFerry;
 pub use select_line::SelectLine;
 use tuirealm::{
     event::{Key, KeyEvent, KeyModifiers},
-    Event, NoUserEvent,
+    Event,
 };
 
-// Let's define the component ids for our application
 #[derive(Debug, Eq, PartialEq, Clone, Hash)]
 pub enum ComponentId {
     Header,

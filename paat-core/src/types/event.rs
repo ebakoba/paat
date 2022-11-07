@@ -4,10 +4,11 @@ use std::{
     collections::BTreeMap,
     fmt::{Display, Formatter, Result},
 };
+
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Capacity {
     #[serde(rename(deserialize = "pcs"))]
-    pub passangers: i32,
+    pub passengers: i32,
     #[serde(rename(deserialize = "bc"))]
     pub bc: i32,
     #[serde(rename(deserialize = "sv"))]
