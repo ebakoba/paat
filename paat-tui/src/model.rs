@@ -72,7 +72,7 @@ impl Model {
                     .split(chunks[2]);
                 let bottom_row = Layout::default()
                     .direction(Direction::Horizontal)
-                    .margin(2)
+                    .margin(0)
                     .constraints(
                         [
                             Constraint::Length(CALENDAR_WIDTH),

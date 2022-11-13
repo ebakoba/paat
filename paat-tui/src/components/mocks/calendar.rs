@@ -168,7 +168,7 @@ impl MockComponent for Calendar {
                 .unwrap_string();
             frame.render_widget(
                 Block::default()
-                    .borders(Borders::TOP)
+                    .borders(Borders::all())
                     .title(calendar_title)
                     .title_alignment(Alignment::Center),
                 area,
