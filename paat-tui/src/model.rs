@@ -1,9 +1,14 @@
 use crate::{
-    components::{AppHeader, ComponentId, DepartureDate, SelectFerry, SelectLine},
+    components::{
+        AppHeader, ComponentId, DepartureDate, HeaderAttributes, HiddenHandler, SelectFerry,
+        SelectLine,
+    },
+    localization::fl,
     messages::Message,
     ports::{ApiClient, ApiEvent},
     style::CALENDAR_WIDTH,
 };
+use anyhow::Result;
 use chrono::NaiveDate;
 use paat_core::{datetime::get_naive_date_from_output_format, types::Direction as PaatDirection};
 use std::time::Duration;
@@ -11,7 +16,7 @@ use tuirealm::{
     props::{PropPayload, PropValue},
     terminal::TerminalBridge,
     tui::layout::{Alignment, Constraint, Direction, Layout},
-    Application, AttrValue, Attribute, EventListenerCfg, Update,
+    Application, AttrValue, Attribute, EventListenerCfg, Sub, SubClause, SubEventClause, Update,
 };
 
 #[derive(Clone, Default)]
@@ -51,38 +56,46 @@ impl Model {
                 let chunks = Layout::default()
                     .direction(Direction::Vertical)
                     .margin(1)
-                    .constraints([Constraint::Length(14), Constraint::Length(14)].as_ref())
+                    .constraints(
+                        [
+                            Constraint::Length(14),
+                            Constraint::Length(0),
+                            Constraint::Length(14),
+                        ]
+                        .as_ref(),
+                    )
                     .split(f.size());
                 let vertical_fixer = Layout::default()
                     .direction(Direction::Vertical)
                     .margin(1)
                     .constraints([Constraint::Max(35)].as_ref())
-                    .split(chunks[1]);
-                let input_chunks = Layout::default()
+                    .split(chunks[2]);
+                let bottom_row = Layout::default()
                     .direction(Direction::Horizontal)
-                    .margin(1)
+                    .margin(2)
                     .constraints(
                         [
                             Constraint::Length(CALENDAR_WIDTH),
                             Constraint::Ratio(1, 4),
                             Constraint::Ratio(1, 4),
-                            Constraint::Ratio(1, 4),
+                            Constraint::Min(0),
                         ]
                         .as_ref(),
                     )
                     .split(vertical_fixer[0]);
                 app.view(&ComponentId::Header, f, chunks[0]);
-                app.view(&ComponentId::DepartureDate, f, input_chunks[0]);
-                app.view(&ComponentId::SelectLine, f, input_chunks[1]);
-                app.view(&ComponentId::SelectFerry, f, input_chunks[2]);
+                app.view(&ComponentId::HiddenHandler, f, chunks[1]);
+                app.view(&ComponentId::DepartureDate, f, bottom_row[0]);
+                app.view(&ComponentId::SelectLine, f, bottom_row[1]);
+                app.view(&ComponentId::SelectFerry, f, bottom_row[2]);
             })
             .is_ok());
     }
 
-    fn configure_listener(&mut self) {
+    fn configure_listener(&mut self) -> Result<()> {
         if let Some(departure_date) = self.state.departure_date {
             if let Some(direction) = self.state.direction {
-                let api_client = ApiClient::try_new(departure_date, direction).unwrap();
+                let api_client = ApiClient::try_new(departure_date, direction)?;
                 assert!(self
                     .app
                     .restart_listener(
@@ -95,6 +108,7 @@ impl Model {
                     .is_ok());
             }
         }
+        Ok(())
     }
 
     fn init_app() -> Application<ComponentId, Message, ApiEvent> {
@@ -126,6 +140,13 @@ impl Model {
                 ComponentId::SelectFerry,
                 Box::new(SelectFerry::default()),
                 vec![]
+            )
+            .is_ok());
+        assert!(app
+            .mount(
+                ComponentId::HiddenHandler,
+                Box::new(HiddenHandler::default()),
+                vec![Sub::new(SubEventClause::Any, SubClause::Always)]
             )
             .is_ok());
         assert!(app.active(&ComponentId::DepartureDate).is_ok());
@@ -184,8 +205,22 @@ impl Update<Message> for Model {
                         .state
                         .intermediate_line_index
                         .and_then(|line_index| PaatDirection::get_line_by_index(line_index));
-                    self.configure_listener();
-                    assert!(self.app.active(&ComponentId::SelectFerry).is_ok());
+
+                    match self.configure_listener() {
+                        Ok(_) => {
+                            assert!(self.app.active(&ComponentId::SelectFerry).is_ok());
+                        }
+                        Err(_) => {
+                            assert!(self
+                                .app
+                                .attr(
+                                    &ComponentId::Header,
+                                    Attribute::Custom(HeaderAttributes::ERROR_TEXT),
+                                    AttrValue::String(fl!("event-fetch-error"))
+                                )
+                                .is_ok());
+                        }
+                    }
                     None
                 }
                 Message::EventsReceived(events) => {

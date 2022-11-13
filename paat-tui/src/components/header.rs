@@ -1,7 +1,7 @@
 use crate::{localization::fl, messages::Message, ports::ApiEvent};
 
 use super::mocks::Header;
-use tuirealm::{Component, MockComponent, NoUserEvent};
+use tuirealm::{Component, MockComponent};
 
 #[derive(MockComponent)]
 pub struct AppHeader {
@@ -13,7 +13,9 @@ impl AppHeader {
         Self {
             component: Header::default()
                 .guide_title(fl!("usage-guide-title"))
-                .guide_text(fl!("usage-guide-text")),
+                .guide_text(fl!("usage-guide-text"))
+                .error_title(fl!("error-title"))
+                .error_text(""),
         }
     }
 }

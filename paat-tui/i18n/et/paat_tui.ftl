@@ -1,5 +1,6 @@
 application-title = Paat
 usage-guide-title = Kasutusjuhend
+error-title = Veateated
 usage-guide-text = Vajuta:{\n}ESC- rakenduse sulgemiseks
 departure-date = Sõidu kuupäev
 monday-character = E
@@ -23,3 +24,4 @@ november = NOVEMBER
 december = DETSEMBER
 select-line = Vali liin
 select-date-first = = Alustuseks vali kuupäev
+event-fetch-error = Väljumisaegade päring ebaõnnestus

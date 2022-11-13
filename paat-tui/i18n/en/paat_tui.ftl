@@ -1,5 +1,6 @@
 application-title = Paat
 usage-guide-title = Usage guide
+error-title = Errors
 usage-guide-text = 
     Press:
     ESC-    to close the application
@@ -26,3 +27,4 @@ november = NOVEMBER
 december = DECEMBER
 select-line = Select Line
 select-date-first = Select date first
+event-fetch-error = Failed to fetch departure times

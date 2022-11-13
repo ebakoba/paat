@@ -1,6 +1,6 @@
 use paat_core::types::event::EventMap;
 use tui_realm_stdlib::List;
-use tuirealm::command::{Cmd, CmdResult, Direction, Position};
+use tuirealm::command::{Cmd, CmdResult, Direction};
 use tuirealm::event::KeyModifiers;
 use tuirealm::props::{Alignment, BorderType, Borders, Color, TableBuilder, TextSpan};
 use tuirealm::{
@@ -13,8 +13,6 @@ use tuirealm::{AttrValue, Attribute, State, StateValue};
 use crate::localization::fl;
 use crate::messages::Message;
 use crate::ports::ApiEvent;
-
-use super::close_event_matcher;
 
 #[derive(MockComponent)]
 pub struct SelectFerry {
@@ -53,18 +51,13 @@ impl Default for SelectFerry {
                 .highlighted_str("🚀")
                 .rewind(true)
                 .step(4)
-                .rows(TableBuilder::default().build())
-                .selected_line(0),
+                .rows(TableBuilder::default().build()),
         }
     }
 }
 
 impl Component<Message, ApiEvent> for SelectFerry {
     fn on(&mut self, event: Event<ApiEvent>) -> Option<Message> {
-        if let Some(message) = close_event_matcher(event.clone(), |_| None) {
-            return Some(message);
-        }
-
         let command = match event {
             Event::Keyboard(KeyEvent {
                 code: Key::Up,
@@ -74,9 +67,6 @@ impl Component<Message, ApiEvent> for SelectFerry {
                 code: Key::Down,
                 modifiers: KeyModifiers::NONE,
             }) => Cmd::Move(Direction::Down),
-            Event::User(ApiEvent::FetchedEvents(events)) => {
-                return Some(Message::EventsReceived(events));
-            }
             _ => Cmd::None,
         };
 

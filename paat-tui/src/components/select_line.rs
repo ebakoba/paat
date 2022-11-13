@@ -1,4 +1,3 @@
-use super::close_event_matcher;
 use crate::localization::fl;
 use crate::messages::Message;
 use crate::ports::ApiEvent;
@@ -53,10 +52,6 @@ impl Default for SelectLine {
 
 impl Component<Message, ApiEvent> for SelectLine {
     fn on(&mut self, event: Event<ApiEvent>) -> Option<Message> {
-        if let Some(message) = close_event_matcher(event.clone(), |_| None) {
-            return Some(message);
-        }
-
         let command = match event {
             Event::Keyboard(KeyEvent {
                 code: Key::Up,
