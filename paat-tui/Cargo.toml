@@ -16,10 +16,10 @@ keywords = ["ferry", "cli-tool", "tui"]
 
 [dependencies]
 anyhow = "1"
-env_logger = "0.9"
+env_logger = "0.10"
 futures = "0.3"
 chrono = "0.4"
-crossterm = "0.23"
+crossterm = "0.26"
 i18n-embed = { version = "0.13", features = [
   "fluent-system",
   "desktop-requester",
