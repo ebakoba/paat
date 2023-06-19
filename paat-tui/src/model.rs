@@ -1,7 +1,7 @@
 use crate::{
     components::{
         AppHeader, ComponentId, DepartureDate, HeaderAttributes, HiddenHandler, SelectFerry,
-        SelectLine,
+        SelectLine, TrackingList, TrackingListElement,
     },
     localization::fl,
     messages::Message,
@@ -10,8 +10,14 @@ use crate::{
 };
 use anyhow::Result;
 use chrono::NaiveDate;
-use paat_core::{datetime::get_naive_date_from_output_format, types::Direction as PaatDirection};
-use std::time::Duration;
+use paat_core::{
+    client::Client,
+    constants::TIMEOUT_BETWEEN_REQUESTS,
+    datetime::get_naive_date_from_output_format,
+    types::{event::EventMap, Direction as PaatDirection},
+};
+use std::{collections::BTreeMap, time::Duration};
+use tokio::runtime::Runtime;
 use tuirealm::{
     props::{PropPayload, PropValue},
     terminal::TerminalBridge,
@@ -21,9 +27,11 @@ use tuirealm::{
 
 #[derive(Clone, Default)]
 pub struct AppState {
-    intermediate_line_index: Option<usize>,
     departure_date: Option<NaiveDate>,
     direction: Option<PaatDirection>,
+    events: EventMap,
+    api_clients: Vec<ApiClient>,
+    track_list: Vec<TrackingListElement>,
 }
 
 pub struct Model {
@@ -32,16 +40,25 @@ pub struct Model {
     pub redraw: bool,
     pub terminal: TerminalBridge,
     pub state: AppState,
+    pub client: Client,
+    pub runtime: Runtime,
 }
 
 impl Default for Model {
     fn default() -> Self {
+        let client = Client::new(Duration::from_secs(TIMEOUT_BETWEEN_REQUESTS));
+        let runtime = tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .unwrap();
         Self {
             app: Self::init_app(),
             quit: false,
             redraw: true,
             terminal: TerminalBridge::new().expect("Cannot initialize terminal"),
             state: AppState::default(),
+            client,
+            runtime,
         }
     }
 }
@@ -76,8 +93,8 @@ impl Model {
                     .constraints(
                         [
                             Constraint::Length(CALENDAR_WIDTH),
-                            Constraint::Ratio(1, 4),
-                            Constraint::Ratio(1, 4),
+                            Constraint::Ratio(1, 5),
+                            Constraint::Ratio(1, 7),
                             Constraint::Min(0),
                         ]
                         .as_ref(),
@@ -88,6 +105,7 @@ impl Model {
                 app.view(&ComponentId::DepartureDate, f, bottom_row[0]);
                 app.view(&ComponentId::SelectLine, f, bottom_row[1]);
                 app.view(&ComponentId::SelectFerry, f, bottom_row[2]);
+                app.view(&ComponentId::TrackingList, f, bottom_row[3])
             })
             .is_ok());
     }
@@ -95,7 +113,9 @@ impl Model {
     fn configure_listener(&mut self) -> Result<()> {
         if let Some(departure_date) = self.state.departure_date {
             if let Some(direction) = self.state.direction {
-                let api_client = ApiClient::try_new(departure_date, direction)?;
+                let api_client =
+                    ApiClient::try_new(&self.client, &self.runtime, departure_date, direction)?;
+                self.state.api_clients.push(api_client.clone());
                 assert!(self
                     .app
                     .restart_listener(
@@ -109,6 +129,33 @@ impl Model {
             }
         }
         Ok(())
+    }
+
+    fn reset_selection(&mut self) {
+        self.state.direction = None;
+        self.state.departure_date = None;
+        assert!(self.app.active(&ComponentId::DepartureDate).is_ok());
+        assert!(self
+            .app
+            .attr(
+                &ComponentId::SelectLine,
+                Attribute::Value,
+                AttrValue::Payload(PropPayload::One(PropValue::Usize(0)))
+            )
+            .is_ok());
+        assert!(self
+            .app
+            .attr(
+                &ComponentId::SelectFerry,
+                Attribute::Title,
+                AttrValue::Title((fl!("select-date-first"), Alignment::Center))
+            )
+            .is_ok());
+        let (attribute, value) = SelectFerry::build_table_rows(BTreeMap::new());
+        assert!(self
+            .app
+            .attr(&ComponentId::SelectFerry, attribute, value)
+            .is_ok());
     }
 
     fn init_app() -> Application<ComponentId, Message, ApiEvent> {
@@ -147,6 +194,13 @@ impl Model {
                 ComponentId::HiddenHandler,
                 Box::new(HiddenHandler::default()),
                 vec![Sub::new(SubEventClause::Any, SubClause::Always)]
+            )
+            .is_ok());
+        assert!(app
+            .mount(
+                ComponentId::TrackingList,
+                Box::new(TrackingList::default()),
+                vec![]
             )
             .is_ok());
         assert!(app.active(&ComponentId::DepartureDate).is_ok());
@@ -197,14 +251,16 @@ impl Update<Message> for Model {
                             AttrValue::Payload(PropPayload::One(PropValue::Usize(line_index)))
                         )
                         .is_ok());
-                    self.state.intermediate_line_index = Some(line_index);
                     None
                 }
                 Message::LineSubmitted => {
-                    self.state.direction = self
-                        .state
-                        .intermediate_line_index
-                        .and_then(|line_index| PaatDirection::get_line_by_index(line_index));
+                    let line_index = self
+                        .app
+                        .state(&ComponentId::SelectLine)
+                        .unwrap()
+                        .unwrap_one()
+                        .unwrap_usize();
+                    self.state.direction = PaatDirection::get_line_by_index(line_index);
 
                     match self.configure_listener() {
                         Ok(_) => {
@@ -224,6 +280,7 @@ impl Update<Message> for Model {
                     None
                 }
                 Message::EventsReceived(events) => {
+                    self.state.events = events.clone();
                     let (attribute, value) = SelectFerry::build_table_rows(events);
                     assert!(self
                         .app
@@ -231,7 +288,51 @@ impl Update<Message> for Model {
                         .is_ok());
                     None
                 }
-                _ => None,
+                Message::FerryChanged(line_index) => {
+                    assert!(self
+                        .app
+                        .attr(
+                            &ComponentId::SelectFerry,
+                            Attribute::Value,
+                            AttrValue::Payload(PropPayload::One(PropValue::Usize(line_index)))
+                        )
+                        .is_ok());
+                    None
+                }
+                Message::FerrySubmitted => {
+                    let line_index = self
+                        .app
+                        .state(&ComponentId::SelectFerry)
+                        .unwrap()
+                        .unwrap_one()
+                        .unwrap_usize();
+                    let mut events = self
+                        .state
+                        .events
+                        .values()
+                        .collect::<Vec<&paat_core::types::event::Event>>();
+                    events.sort_by_key(|event| event.start.clone());
+                    let event = events[line_index];
+                    self.state.api_clients.last().unwrap().start_monitoring(
+                        &self.client,
+                        &self.runtime,
+                        event.uuid.clone(),
+                    );
+                    self.state.track_list.push(TrackingListElement::new(
+                        self.state.direction,
+                        self.state.departure_date,
+                        event,
+                    ));
+                    let (attribute, value) =
+                        TrackingList::build_table_rows(self.state.track_list.clone());
+                    assert!(self
+                        .app
+                        .attr(&ComponentId::TrackingList, attribute, value)
+                        .is_ok());
+                    self.reset_selection();
+                    None
+                }
+                Message::WaitResultReceived(_) => None,
             }
         } else {
             None

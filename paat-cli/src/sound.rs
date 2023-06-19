@@ -2,7 +2,7 @@ use anyhow::{Ok, Result};
 use rodio::{Decoder, OutputStream, Sink, Source};
 use std::{include_bytes, io::Cursor};
 
-pub async fn play_infinate_sound() -> Result<()> {
+pub async fn play_infinite_sound() -> Result<()> {
     let sound_bytes = include_bytes!("../assets/sample.wav");
 
     let (_stream, stream_handle) = OutputStream::try_default()?;

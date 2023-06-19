@@ -20,6 +20,9 @@ impl Component<Message, ApiEvent> for HiddenHandler {
             Event::User(ApiEvent::FetchedEvents(events)) => {
                 return Some(Message::EventsReceived(events));
             }
+            Event::User(ApiEvent::WaitResult(wait_result)) => {
+                return Some(Message::WaitResultReceived(wait_result));
+            }
             _ => None,
         }
     }

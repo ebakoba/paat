@@ -1,18 +1,16 @@
+use crate::localization::fl;
+use crate::messages::Message;
+use crate::ports::ApiEvent;
 use paat_core::types::event::EventMap;
 use tui_realm_stdlib::List;
 use tuirealm::command::{Cmd, CmdResult, Direction};
 use tuirealm::event::KeyModifiers;
 use tuirealm::props::{Alignment, BorderType, Borders, Color, TableBuilder, TextSpan};
 use tuirealm::{
-    application::PollStrategy,
     event::{Key, KeyEvent},
-    Application, Component, Event, EventListenerCfg, MockComponent, NoUserEvent, Update,
+    Component, Event, MockComponent,
 };
 use tuirealm::{AttrValue, Attribute, State, StateValue};
-// tui
-use crate::localization::fl;
-use crate::messages::Message;
-use crate::ports::ApiEvent;
 
 #[derive(MockComponent)]
 pub struct SelectFerry {
@@ -67,6 +65,10 @@ impl Component<Message, ApiEvent> for SelectFerry {
                 code: Key::Down,
                 modifiers: KeyModifiers::NONE,
             }) => Cmd::Move(Direction::Down),
+            Event::Keyboard(KeyEvent {
+                code: Key::Enter,
+                modifiers: KeyModifiers::NONE,
+            }) => return Some(Message::FerrySubmitted),
             _ => Cmd::None,
         };
 

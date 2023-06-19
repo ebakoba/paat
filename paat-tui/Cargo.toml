@@ -25,7 +25,6 @@ i18n-embed = { version = "0.13", features = [
   "desktop-requester",
 ] }
 i18n-embed-fl = "0.6"
-image2ascii = "0.2"
 log = "0.4"
 once_cell = "1"
 paat-core = { path = "../paat-core", version = "0.1" }

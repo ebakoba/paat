@@ -1,4 +1,4 @@
-use crate::sound::play_infinate_sound;
+use crate::sound::play_infinite_sound;
 use futures::{
     future::FutureExt, // for `.fuse()`
     pin_mut,
@@ -15,7 +15,7 @@ async fn print_end_text(number_of_spots: usize) {
 
 pub async fn create_final_output(number_of_spots: usize) {
     let ctrl_c_future = ctrl_c().fuse();
-    let music_future = play_infinate_sound().fuse();
+    let music_future = play_infinite_sound().fuse();
     let text_future = print_end_text(number_of_spots).fuse();
 
     pin_mut!(ctrl_c_future, music_future, text_future);

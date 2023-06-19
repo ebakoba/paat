@@ -14,6 +14,7 @@ use std::time::Duration;
 use strum::EnumProperty;
 use tokio::time::sleep;
 
+#[derive(Clone)]
 pub struct Client {
     client: ReqwestClient,
     pause_between_stream_items: Duration,
@@ -89,7 +90,7 @@ impl Client {
                     return Ok(WaitForSpot::Waiting);
                 }
                 Err(anyhow!(
-                    "Failed to find corresponding event with followinf uuid: {}",
+                    "Failed to find corresponding event with following uuid: {}",
                     event_uuid
                 ))
             })

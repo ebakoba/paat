@@ -28,3 +28,7 @@ december = DECEMBER
 select-line = Select Line
 select-date-first = Select date first
 event-fetch-error = Failed to fetch departure times
+track-list = Track list
+direction = Direction
+date = Date
+time = Time

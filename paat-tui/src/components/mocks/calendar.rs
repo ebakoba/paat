@@ -166,8 +166,13 @@ impl MockComponent for Calendar {
                 .get(Attribute::Custom(CALENDAR_TITLE))
                 .unwrap()
                 .unwrap_string();
+            let border_style = match self.props.get(Attribute::Focus) {
+                Some(AttrValue::Flag(true)) => Style::default().fg(Color::Yellow),
+                _ => Style::default(),
+            };
             frame.render_widget(
                 Block::default()
+                    .border_style(border_style)
                     .borders(Borders::all())
                     .title(calendar_title)
                     .title_alignment(Alignment::Center),

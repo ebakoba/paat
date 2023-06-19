@@ -43,6 +43,8 @@ pub struct Event {
 
 pub type EventMap = BTreeMap<String, Event>;
 
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+
 pub enum WaitForSpot {
     Done(usize),
     Waiting,

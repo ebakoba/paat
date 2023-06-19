@@ -25,3 +25,7 @@ december = DETSEMBER
 select-line = Vali liin
 select-date-first = = Alustuseks vali kuupäev
 event-fetch-error = Väljumisaegade päring ebaõnnestus
+track-list = Jälgimine
+direction = Suund
+date = Kuupäev
+time = Aeg

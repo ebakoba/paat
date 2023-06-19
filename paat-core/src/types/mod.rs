@@ -3,8 +3,9 @@ use crate::constants::LINES;
 use std::str::FromStr;
 use strum_macros::{Display, EnumProperty, EnumString};
 
-#[derive(Display, Debug, Clone, Copy, EnumString, EnumProperty)]
+#[derive(Display, Debug, Clone, Copy, EnumString, EnumProperty, Default)]
 pub enum Direction {
+    #[default]
     #[strum(props(Abbreviation = "HR"), to_string = "Heltermaa - Rohuküla")]
     HR,
     #[strum(props(Abbreviation = "RH"), to_string = "Rohuküla - Heltermaa")]
