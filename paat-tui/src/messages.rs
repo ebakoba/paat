@@ -11,4 +11,5 @@ pub enum Message {
     FerrySubmitted,
     LineChanged(usize),
     LineSubmitted,
+    TickFromListener,
 }

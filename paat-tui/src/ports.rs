@@ -20,6 +20,7 @@ use tuirealm::{
 pub enum ApiEvent {
     FetchedEvents(EventMap),
     WaitResult((String, WaitForSpot)),
+    NoOperation,
 }
 
 #[derive(Clone)]
@@ -81,6 +82,6 @@ impl Poll<ApiEvent> for ApiClient {
             }
         }
 
-        Ok(None)
+        Ok(Some(Event::User(ApiEvent::NoOperation)))
     }
 }

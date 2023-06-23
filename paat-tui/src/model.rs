@@ -333,6 +333,18 @@ impl Update<Message> for Model {
                     None
                 }
                 Message::WaitResultReceived(_) => None,
+                Message::TickFromListener => {
+                    for element in self.state.track_list.iter_mut() {
+                        element.counter += 1;
+                    }
+                    let (attribute, value) =
+                        TrackingList::build_table_rows(self.state.track_list.clone());
+                    assert!(self
+                        .app
+                        .attr(&ComponentId::TrackingList, attribute, value)
+                        .is_ok());
+                    None
+                }
             }
         } else {
             None

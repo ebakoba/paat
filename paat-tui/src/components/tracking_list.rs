@@ -19,6 +19,7 @@ pub struct TrackingListElement {
     direction: Direction,
     date: String,
     time: String,
+    pub counter: usize,
 }
 
 impl TrackingListElement {
@@ -27,11 +28,22 @@ impl TrackingListElement {
             direction: direction.unwrap(),
             date: date.unwrap().to_string(),
             time: time.to_string(),
+            counter: 0,
         }
     }
 }
 
 impl TrackingList {
+    fn create_loader(count: usize) -> TextSpan {
+        let mut loader = String::new();
+        if (count % 10) > 5 {
+            loader.push_str("🙉");
+        } else {
+            loader.push_str("🙈");
+        }
+        TextSpan::from(loader)
+    }
+
     fn render_table_header(builder: &mut TableBuilder) {
         builder
             .add_col(TextSpan::from(format!("{}", fl!("direction"))).bold())
@@ -52,6 +64,7 @@ impl TrackingList {
                 .add_col(TextSpan::from(format!("{}", track.direction)))
                 .add_col(TextSpan::from(format!("{}", track.date)))
                 .add_col(TextSpan::from(format!("{}", track.time)))
+                .add_col(Self::create_loader(track.counter))
                 .add_row()
                 .add_col(TextSpan::from("  "))
                 .add_row();

@@ -23,6 +23,9 @@ impl Component<Message, ApiEvent> for HiddenHandler {
             Event::User(ApiEvent::WaitResult(wait_result)) => {
                 return Some(Message::WaitResultReceived(wait_result));
             }
+            Event::User(ApiEvent::NoOperation) => {
+                return Some(Message::TickFromListener);
+            }
             _ => None,
         }
     }
