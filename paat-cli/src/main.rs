@@ -1,6 +1,5 @@
 mod inputs;
 mod output;
-mod sound;
 
 use crate::inputs::{input_departure_date, input_direction};
 use anyhow::{anyhow, Result};

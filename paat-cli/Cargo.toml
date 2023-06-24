@@ -23,7 +23,6 @@ dialoguer = "0.10"
 indicatif = "0.17"
 log = "0.4"
 paat-core = { path = "../paat-core", version = "0.1" }
-rodio = { version = "0.15", default-features = false, features = ["wav"] }
 tokio = { version = "1", default-features = false, features = [
   "time",
   "signal",

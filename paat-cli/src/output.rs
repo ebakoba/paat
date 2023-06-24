@@ -1,10 +1,10 @@
-use crate::sound::play_infinite_sound;
 use futures::{
     future::FutureExt, // for `.fuse()`
     pin_mut,
     select,
 };
 use log::debug;
+use paat_core::sound::play_infinite_sound;
 use tokio::signal::ctrl_c;
 
 async fn print_end_text(number_of_spots: usize) {

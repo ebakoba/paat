@@ -1429,7 +1429,6 @@ dependencies = [
  "indicatif",
  "log",
  "paat-core",
- "rodio",
  "tokio",
 ]
 
@@ -1444,6 +1443,7 @@ dependencies = [
  "lazy_static",
  "log",
  "reqwest",
+ "rodio",
  "serde",
  "serde_json",
  "strum",
