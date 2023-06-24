@@ -20,21 +20,28 @@ pub struct TrackingListElement {
     date: String,
     time: String,
     pub counter: usize,
+    pub event_uuid: String,
+    pub free_spots: Option<usize>,
 }
 
 impl TrackingListElement {
-    pub fn new(direction: Option<Direction>, date: Option<NaiveDate>, time: &PaatEvent) -> Self {
+    pub fn new(direction: Option<Direction>, date: Option<NaiveDate>, event: &PaatEvent) -> Self {
         Self {
             direction: direction.unwrap(),
             date: date.unwrap().to_string(),
-            time: time.to_string(),
+            time: event.to_string(),
             counter: 0,
+            event_uuid: event.uuid.clone(),
+            free_spots: None,
         }
     }
 }
 
 impl TrackingList {
-    fn create_loader(count: usize) -> TextSpan {
+    fn create_loader(count: usize, spots: Option<usize>) -> TextSpan {
+        if let Some(spots) = spots {
+            return TextSpan::from(format!("{} {} 🥳", spots, fl!("spots")));
+        }
         let mut loader = String::new();
         if (count % 10) > 5 {
             loader.push_str("🙉");
@@ -64,7 +71,7 @@ impl TrackingList {
                 .add_col(TextSpan::from(format!("{}", track.direction)))
                 .add_col(TextSpan::from(format!("{}", track.date)))
                 .add_col(TextSpan::from(format!("{}", track.time)))
-                .add_col(Self::create_loader(track.counter))
+                .add_col(Self::create_loader(track.counter, track.free_spots))
                 .add_row()
                 .add_col(TextSpan::from("  "))
                 .add_row();
@@ -85,7 +92,7 @@ impl Default for TrackingList {
                         .modifiers(BorderType::Rounded)
                         .color(Color::Yellow),
                 )
-                .widths(&[40, 25, 30, 5])
+                .widths(&[40, 20, 20, 20])
                 .title(fl!("track-list"), Alignment::Center)
                 .table(builder.build()),
         }

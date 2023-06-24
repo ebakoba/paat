@@ -6,7 +6,7 @@ use crate::{
     localization::fl,
     messages::Message,
     ports::{ApiClient, ApiEvent},
-    style::CALENDAR_WIDTH,
+    style::{CALENDAR_WIDTH, DATE_SELECT_WIDTH, LINE_SELECT_WIDTH},
 };
 use anyhow::Result;
 use chrono::NaiveDate;
@@ -14,7 +14,10 @@ use paat_core::{
     client::Client,
     constants::TIMEOUT_BETWEEN_REQUESTS,
     datetime::get_naive_date_from_output_format,
-    types::{event::EventMap, Direction as PaatDirection},
+    types::{
+        event::{EventMap, WaitForSpot},
+        Direction as PaatDirection,
+    },
 };
 use std::{collections::BTreeMap, time::Duration};
 use tokio::runtime::Runtime;
@@ -93,8 +96,8 @@ impl Model {
                     .constraints(
                         [
                             Constraint::Length(CALENDAR_WIDTH),
-                            Constraint::Ratio(1, 5),
-                            Constraint::Ratio(1, 7),
+                            Constraint::Length(LINE_SELECT_WIDTH),
+                            Constraint::Length(DATE_SELECT_WIDTH),
                             Constraint::Min(0),
                         ]
                         .as_ref(),
@@ -156,6 +159,14 @@ impl Model {
             .app
             .attr(&ComponentId::SelectFerry, attribute, value)
             .is_ok());
+    }
+
+    fn get_event_ids(&self) -> Vec<String> {
+        self.state
+            .track_list
+            .iter()
+            .map(|element| element.event_uuid.clone())
+            .collect()
     }
 
     fn init_app() -> Application<ComponentId, Message, ApiEvent> {
@@ -318,21 +329,38 @@ impl Update<Message> for Model {
                         &self.runtime,
                         event.uuid.clone(),
                     );
-                    self.state.track_list.push(TrackingListElement::new(
-                        self.state.direction,
-                        self.state.departure_date,
-                        event,
-                    ));
+                    if !self.get_event_ids().contains(&event.uuid) {
+                        self.state.track_list.push(TrackingListElement::new(
+                            self.state.direction,
+                            self.state.departure_date,
+                            event,
+                        ));
+                        let (attribute, value) =
+                            TrackingList::build_table_rows(self.state.track_list.clone());
+                        assert!(self
+                            .app
+                            .attr(&ComponentId::TrackingList, attribute, value)
+                            .is_ok());
+                    }
+                    self.reset_selection();
+                    None
+                }
+                Message::WaitResultReceived((event_uuid, spot)) => {
+                    if let WaitForSpot::Done(number) = spot {
+                        for element in self.state.track_list.iter_mut() {
+                            if element.event_uuid == event_uuid {
+                                element.free_spots = Some(number);
+                            }
+                        }
+                    }
                     let (attribute, value) =
                         TrackingList::build_table_rows(self.state.track_list.clone());
                     assert!(self
                         .app
                         .attr(&ComponentId::TrackingList, attribute, value)
                         .is_ok());
-                    self.reset_selection();
                     None
                 }
-                Message::WaitResultReceived(_) => None,
                 Message::TickFromListener => {
                     for element in self.state.track_list.iter_mut() {
                         element.counter += 1;

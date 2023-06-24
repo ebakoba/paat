@@ -29,3 +29,4 @@ track-list = Jälgimine
 direction = Suund
 date = Kuupäev
 time = Aeg
+spots = koht(a)

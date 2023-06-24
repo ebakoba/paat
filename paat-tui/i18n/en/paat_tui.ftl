@@ -32,3 +32,4 @@ track-list = Track list
 direction = Direction
 date = Date
 time = Time
+spots = Spot(s)
