@@ -23,7 +23,7 @@ october = OKTOOBER
 november = NOVEMBER
 december = DETSEMBER
 select-line = Vali liin
-select-date-first = = Alustuseks vali kuupäev
+select-date-first = = Vali kuupäev
 event-fetch-error = Väljumisaegade päring ebaõnnestus
 track-list = Jälgimine
 direction = Suund

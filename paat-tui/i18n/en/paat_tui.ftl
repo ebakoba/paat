@@ -5,6 +5,10 @@ usage-guide-text =
     Press:
     ESC-    to close the application
     c-      to go the calendar
+    h-      to clear finished events
+    s-      to clear unfinished events
+    l-      to clear all events
+    f-      to kill the alarm
 departure-date = Departure date
 monday-character = M
 tuesday-character = T
@@ -26,7 +30,7 @@ october = OCTOBER
 november = NOVEMBER
 december = DECEMBER
 select-line = Select Line
-select-date-first = Select date first
+select-date-first = Select date
 event-fetch-error = Failed to fetch departure times
 track-list = Track list
 direction = Direction
