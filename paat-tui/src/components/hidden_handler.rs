@@ -17,6 +17,26 @@ impl Component<Message, ApiEvent> for HiddenHandler {
                 code: Key::Esc,
                 modifiers: KeyModifiers::NONE,
             }) => Some(Message::AppClose),
+            Event::Keyboard(KeyEvent {
+                code: Key::Char('c'),
+                modifiers: KeyModifiers::NONE,
+            }) => Some(Message::BackToCalendar),
+            Event::Keyboard(KeyEvent {
+                code: Key::Char('h'),
+                modifiers: KeyModifiers::NONE,
+            }) => Some(Message::ClearFinished),
+            Event::Keyboard(KeyEvent {
+                code: Key::Char('l'),
+                modifiers: KeyModifiers::NONE,
+            }) => Some(Message::ClearAll),
+            Event::Keyboard(KeyEvent {
+                code: Key::Char('s'),
+                modifiers: KeyModifiers::NONE,
+            }) => Some(Message::ClearUnfinished),
+            Event::Keyboard(KeyEvent {
+                code: Key::Char('f'),
+                modifiers: KeyModifiers::NONE,
+            }) => Some(Message::KillTheAlarm),
             Event::User(ApiEvent::FetchedEvents(events)) => {
                 return Some(Message::EventsReceived(events));
             }

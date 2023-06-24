@@ -373,6 +373,46 @@ impl Update<Message> for Model {
                         .is_ok());
                     None
                 }
+                Message::BackToCalendar => {
+                    self.reset_selection();
+                    assert!(self.app.active(&ComponentId::DepartureDate).is_ok());
+                    None
+                }
+                Message::ClearAll => {
+                    self.state.track_list.clear();
+                    let (attribute, value) =
+                        TrackingList::build_table_rows(self.state.track_list.clone());
+                    assert!(self
+                        .app
+                        .attr(&ComponentId::TrackingList, attribute, value)
+                        .is_ok());
+                    None
+                }
+                Message::ClearFinished => {
+                    self.state
+                        .track_list
+                        .retain(|element| element.free_spots.is_some());
+                    let (attribute, value) =
+                        TrackingList::build_table_rows(self.state.track_list.clone());
+                    assert!(self
+                        .app
+                        .attr(&ComponentId::TrackingList, attribute, value)
+                        .is_ok());
+                    None
+                }
+                Message::ClearUnfinished => {
+                    self.state
+                        .track_list
+                        .retain(|element| element.free_spots.is_none());
+                    let (attribute, value) =
+                        TrackingList::build_table_rows(self.state.track_list.clone());
+                    assert!(self
+                        .app
+                        .attr(&ComponentId::TrackingList, attribute, value)
+                        .is_ok());
+                    None
+                }
+                Message::KillTheAlarm => None,
             }
         } else {
             None

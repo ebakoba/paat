@@ -12,4 +12,9 @@ pub enum Message {
     LineChanged(usize),
     LineSubmitted,
     TickFromListener,
+    ClearFinished,
+    ClearUnfinished,
+    ClearAll,
+    BackToCalendar,
+    KillTheAlarm,
 }
