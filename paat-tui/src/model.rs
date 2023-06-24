@@ -363,7 +363,7 @@ impl Update<Message> for Model {
                 }
                 Message::TickFromListener => {
                     for element in self.state.track_list.iter_mut() {
-                        element.counter += 1;
+                        element.counter = (element.counter % usize::MAX) + 1;
                     }
                     let (attribute, value) =
                         TrackingList::build_table_rows(self.state.track_list.clone());
