@@ -14,13 +14,17 @@ use paat_core::{
     client::Client,
     constants::TIMEOUT_BETWEEN_REQUESTS,
     datetime::get_naive_date_from_output_format,
+    sound::play_infinite_sound,
     types::{
         event::{EventMap, WaitForSpot},
         Direction as PaatDirection,
     },
 };
 use std::{collections::BTreeMap, time::Duration};
-use tokio::runtime::Runtime;
+use tokio::{
+    runtime::Runtime,
+    sync::oneshot::{self, Sender},
+};
 use tuirealm::{
     props::{PropPayload, PropValue},
     terminal::TerminalBridge,
@@ -43,6 +47,7 @@ pub struct Model {
     pub redraw: bool,
     pub terminal: TerminalBridge,
     pub state: AppState,
+    pub alarm: Option<Sender<()>>,
     pub client: Client,
     pub runtime: Runtime,
 }
@@ -60,6 +65,7 @@ impl Default for Model {
             redraw: true,
             terminal: TerminalBridge::new().expect("Cannot initialize terminal"),
             state: AppState::default(),
+            alarm: None,
             client,
             runtime,
         }
@@ -132,6 +138,17 @@ impl Model {
             }
         }
         Ok(())
+    }
+
+    fn play_music(&mut self) {
+        if self.alarm.is_none() {
+            let (sender, receiver) = oneshot::channel::<()>();
+            self.runtime.spawn(async move {
+                play_infinite_sound(receiver).await?;
+                anyhow::Result::<()>::Ok(())
+            });
+            self.alarm = Some(sender);
+        }
     }
 
     fn reset_selection(&mut self) {
@@ -346,12 +363,17 @@ impl Update<Message> for Model {
                     None
                 }
                 Message::WaitResultReceived((event_uuid, spot)) => {
+                    let mut spot_found = false;
                     if let WaitForSpot::Done(number) = spot {
                         for element in self.state.track_list.iter_mut() {
                             if element.event_uuid == event_uuid {
                                 element.free_spots = Some(number);
+                                spot_found = true;
                             }
                         }
+                    }
+                    if spot_found {
+                        self.play_music();
                     }
                     let (attribute, value) =
                         TrackingList::build_table_rows(self.state.track_list.clone());
@@ -412,7 +434,14 @@ impl Update<Message> for Model {
                         .is_ok());
                     None
                 }
-                Message::KillTheAlarm => None,
+                Message::KillTheAlarm => {
+                    let alarm = self.alarm.take();
+                    if let Some(alarm) = alarm {
+                        alarm.send(()).unwrap();
+                    }
+                    self.alarm = None;
+                    None
+                }
             }
         } else {
             None

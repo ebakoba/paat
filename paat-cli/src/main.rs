@@ -37,7 +37,7 @@ async fn main() -> Result<()> {
         match wait_response {
             WaitForSpot::Done(number_of_spots) => {
                 progress_bar.finish_and_clear();
-                create_final_output(number_of_spots).await;
+                create_final_output(number_of_spots).await?;
                 return Ok(());
             }
             WaitForSpot::Waiting => {
