@@ -85,7 +85,7 @@ impl Client {
                 let event_map = event_map_result?;
                 if let Some(event) = event_map.get(event_uuid) {
                     if event.capacities.small_vehicles > 0 {
-                        return Ok(WaitForSpot::Done(event.capacities.small_vehicles as usize));
+                        return Ok(WaitForSpot::Done(event.to_owned()));
                     }
                     return Ok(WaitForSpot::Waiting);
                 }

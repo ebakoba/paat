@@ -15,6 +15,7 @@ keywords = ["api-bindings", "internal-api", "ferry"]
 [dependencies]
 anyhow = "1"
 chrono = "0.4"
+chromiumoxide = { git = "https://github.com/mattsse/chromiumoxide", branch = "main", default-features = false, features = ["tokio-runtime"], optional = true }
 const_format = "0.2"
 futures = "0.3"
 lazy_static = "1"
@@ -29,5 +30,7 @@ strum_macros = "0.24"
 tokio = { version = "1", default-features = false, features = ["time", "sync"] }
 
 [features]
-default = ["music"]
+default = ["music", "booking"]
 music = ["rodio"]
+booking = ["chromiumoxide"]
+

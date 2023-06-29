@@ -6,7 +6,7 @@ use anyhow::{anyhow, Result};
 use env_logger::init;
 use futures::StreamExt;
 use indicatif::ProgressBar;
-use inputs::input_event;
+use inputs::{input_booking_id, input_event};
 use output::create_final_output;
 use paat_core::{
     client::Client,
@@ -25,6 +25,8 @@ async fn main() -> Result<()> {
     let event_map = client.fetch_events(&departure_date, &direction).await?;
 
     let selected_event = input_event(event_map)?;
+    let booking_id = input_booking_id()?;
+
     let progress_bar = ProgressBar::new_spinner();
     progress_bar.enable_steady_tick(*TICK_TIMEOUT_DURATION);
 
@@ -35,9 +37,9 @@ async fn main() -> Result<()> {
     while let Some(wait_result) = wait_stream.next().await {
         let wait_response = wait_result?;
         match wait_response {
-            WaitForSpot::Done(number_of_spots) => {
+            WaitForSpot::Done(event) => {
                 progress_bar.finish_and_clear();
-                create_final_output(number_of_spots).await?;
+                create_final_output(&event, &direction, &departure_date, &booking_id).await?;
                 return Ok(());
             }
             WaitForSpot::Waiting => {

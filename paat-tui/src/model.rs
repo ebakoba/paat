@@ -364,10 +364,10 @@ impl Update<Message> for Model {
                 }
                 Message::WaitResultReceived((event_uuid, spot)) => {
                     let mut spot_found = false;
-                    if let WaitForSpot::Done(number) = spot {
+                    if let WaitForSpot::Done(event) = spot {
                         for element in self.state.track_list.iter_mut() {
                             if element.event_uuid == event_uuid {
-                                element.free_spots = Some(number);
+                                element.free_spots = Some(event.capacities.small_vehicles as usize);
                                 spot_found = true;
                             }
                         }

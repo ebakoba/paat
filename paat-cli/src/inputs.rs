@@ -23,6 +23,19 @@ pub fn input_departure_date() -> io::Result<NaiveDate> {
     Ok(departure_date)
 }
 
+pub fn input_booking_id() -> io::Result<Option<String>> {
+    let booking_id: String = Input::new()
+        .allow_empty(true)
+        .with_prompt("Booking ID (optional)")
+        .interact_text()?;
+    let booking_id = booking_id.trim().to_string();
+    let booking_id = match booking_id.len() {
+        0 => None,
+        _ => Some(booking_id),
+    };
+    Ok(booking_id)
+}
+
 pub fn input_direction() -> io::Result<Direction> {
     let selection = Select::with_theme(&ColorfulTheme::default())
         .items(&LINES)
