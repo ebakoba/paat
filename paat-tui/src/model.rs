@@ -54,7 +54,10 @@ pub struct Model {
 
 impl Default for Model {
     fn default() -> Self {
-        let client = Client::new(Duration::from_secs(TIMEOUT_BETWEEN_REQUESTS));
+        let timeout_between_requests = std::env::var("TIMEOUT_BETWEEN_REQUESTS")
+            .map(|timeout| timeout.parse::<u64>().unwrap_or(TIMEOUT_BETWEEN_REQUESTS))
+            .unwrap_or(TIMEOUT_BETWEEN_REQUESTS);
+        let client = Client::new(Duration::from_secs(timeout_between_requests));
         let runtime = tokio::runtime::Builder::new_multi_thread()
             .enable_all()
             .build()
