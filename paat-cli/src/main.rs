@@ -17,11 +17,14 @@ use std::time::Duration;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    let timeout_between_requests = std::env::var("TIMEOUT_BETWEEN_REQUESTS")
+        .map(|timeout| timeout.parse::<u64>().unwrap_or(TIMEOUT_BETWEEN_REQUESTS))
+        .unwrap_or(TIMEOUT_BETWEEN_REQUESTS);
     init();
     let direction = input_direction()?;
     let departure_date = input_departure_date()?;
 
-    let client = Client::new(Duration::from_secs(TIMEOUT_BETWEEN_REQUESTS));
+    let client = Client::new(Duration::from_secs(timeout_between_requests));
     let event_map = client.fetch_events(&departure_date, &direction).await?;
 
     let selected_event = input_event(event_map)?;
