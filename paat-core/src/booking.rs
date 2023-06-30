@@ -32,7 +32,7 @@ const BOOKING_BUTTON_SELECTOR: &str = r#"article > div.flex.justify-between.lg\:
 const CONTINUE_BUTTON_SELECTOR: &str = r#"#modal-ticket-content > footer > app-button"#;
 
 async fn wait_for_element(page: &Page, selector: &str) -> Option<Element> {
-    let timeout_in_seconds = 10;
+    let timeout_in_seconds = 5;
     let current_time = std::time::Instant::now();
     loop {
         let element = page.find_element(selector).await;
